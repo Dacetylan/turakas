@@ -1,0 +1,47 @@
+#board, #trump {
+	display: inline-block;
+	height: 150px;
+	width: 84%;
+	border: 2px dotted black;
+}
+
+#deck {
+	display: inline-block;
+	float: right;
+	height: 100%;
+	width: 15%;
+	border: 1px solid green;
+}
+
+.btn {
+	width: 75px;
+	height: 30px;
+	color: white;
+	display: inline-block;
+	background-color: red;
+	border: 2px solid yellow;
+}
+
+#muck {
+	display: inline-block;
+	float: right;
+	height: auto;
+	width: 30%;
+	border: 1px dotted red;
+}
+
+.selected {
+	border: 3px solid yellow;
+}
+.card {
+	box-sizing: border-box;
+	display: inline-block;
+	height: 100px;
+	width: 75px;
+	margin: 3px;
+	padding: 10px;
+	border: 1px solid lightgray;
+	border-radius: 7px;
+	font-size: 2rem;
+	color: white;
+}
