@@ -28,10 +28,8 @@ http.createServer( (req, res) => {
     let ip = req.connection.remoteAddress
 
     let pong = () => {
-      let connection = {
-        ip: ip,
-      }
-      return JSON.stringify(connection)
+
+      return JSON.stringify(game)
     }
     let send = (data, type) => {
       res.writeHead(200, {"Content-Type": type})
@@ -65,25 +63,30 @@ http.createServer( (req, res) => {
         send(rawFile, chooseFile().answerType)  
       })
     }
-
-
-
-
     let handleEmail = (email) => {
       console.log("handling email")
       let player = {
         "ip": ip,
         "email": email,
       }
-      game.registered += 1
-      game.players.push(player)
-      console.log(player)
+      let check = () => {
+        if (game.registered === 0) {
+          game.players.push(player)
+          game.registered += 1
+        } 
+        if (game.registered === 1) {
+            if (game.players[0].ip === ip) {
+              console.log("Player already registered")
+          } else {
+            game.players.push(player)
+            game.registered += 1
+          }
+        }
+      }
+      check()
+      
       return JSON.stringify(game)
     }
-
-
-
-
     let route = () => {
       let command = url.parse(req.url, true)
       console.log(command)
@@ -105,7 +108,6 @@ http.createServer( (req, res) => {
       }
     }
     route(req)
-
   } catch (error) {
     res.statusCode = 400
     return res.end(error.stack)

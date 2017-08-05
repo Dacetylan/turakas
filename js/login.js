@@ -11,12 +11,14 @@ document.getElementById("login").onclick = () => {
 
 let fireCmd = (obj) => {
   console.log(obj)
+
   Object.keys(obj).forEach((key) => {
-    if (game[key] === a[key]) {
+    if (game[key] === obj[key]) {
       console.log("same key")
     } else {
-      game[key] = a[key]
+      game[key] = obj[key]
     }
+    document.getElementById("waiting").innerHTML = game.registered
   })
 
 }
