@@ -5,9 +5,9 @@
 </head>
 <body>
 	<span>Turakas: </span><span id="waiting"></span>
-	<form>
-		<input type="email" name="email" placeholder="name@mail.com" value="part@prov.co"/>
-		<input type="submit" value="login">
+	<form onsubmit="return false">
+		<input type="email" id="email" placeholder="name@mail.com" value="part@prov.co"/>
+		<button  id="login" value="login">login</button>
 	</form>
 	<script type="text/javascript" src="js/login.js"></script>
 </body>
