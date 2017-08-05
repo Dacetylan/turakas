@@ -1,5 +1,9 @@
-document.getElementById("waiting").innerHTML = 0
+let game = {
+  registered: 0,
+}
 
+
+document.getElementById("waiting").innerHTML = game.registered
 document.getElementById("login").onclick = () => {
   let email = document.getElementById("email").value
   transmit("?email=" + email)
@@ -7,6 +11,14 @@ document.getElementById("login").onclick = () => {
 
 let fireCmd = (obj) => {
   console.log(obj)
+  Object.keys(obj).forEach((key) => {
+    if (game[key] === a[key]) {
+      console.log("same key")
+    } else {
+      game[key] = a[key]
+    }
+  })
+
 }
 
 let poll = () => {

@@ -15,6 +15,7 @@ let engine = () => {
 
 const game = {
   registered: 0,
+  players: []
 }
 
 const http = require("http")
@@ -30,7 +31,6 @@ http.createServer( (req, res) => {
       let connection = {
         ip: ip,
       }
-      console.log(connection)
       return JSON.stringify(connection)
     }
     let send = (data, type) => {
@@ -75,10 +75,11 @@ http.createServer( (req, res) => {
         "ip": ip,
         "email": email,
       }
+      game.registered += 1
+      game.players.push(player)
       console.log(player)
-      return JSON.stringify(player)
-    }  
-
+      return JSON.stringify(game)
+    }
 
 
 
@@ -104,7 +105,6 @@ http.createServer( (req, res) => {
       }
     }
     route(req)
-
 
   } catch (error) {
     res.statusCode = 400
