@@ -8,8 +8,8 @@ let engine = () => {
   }
   
   return {
-    deal: deal(),
-    testCard: testCard()
+    deal: deal,
+    testCard: testCard
   }
 }
 
@@ -30,9 +30,6 @@ http.createServer( (req, res) => {
       console.log(connection)
       return JSON.stringify(connection)
     }
-
-
-
     let send = (data, type) => {
       res.writeHead(200, {"Content-Type": type})
       res.end(data)
@@ -64,7 +61,14 @@ http.createServer( (req, res) => {
 
         send(rawFile, chooseFile().answerType)  
       })
-    }   
+    }
+
+
+
+
+    let handleEmail = (email) => {
+
+    }  
 
 
 
@@ -78,6 +82,12 @@ http.createServer( (req, res) => {
         switch (command.search) {
           case "?ping":
           send(pong(), "json")
+          break
+          case "?email":
+          send(handleEmail(command.query.email), "json")
+          break
+          case "?testCard":
+          send(engine().testCard(command.query.testCard), "json")
           break
 
         }
