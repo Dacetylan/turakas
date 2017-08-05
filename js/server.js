@@ -13,6 +13,9 @@ let engine = () => {
   }
 }
 
+const game = {
+  registered: 0,
+}
 
 const http = require("http")
 const url = require("url")
@@ -67,7 +70,13 @@ http.createServer( (req, res) => {
 
 
     let handleEmail = (email) => {
-
+      console.log("handling email")
+      let player = {
+        "ip": ip,
+        "email": email,
+      }
+      console.log(player)
+      return JSON.stringify(player)
     }  
 
 
@@ -79,21 +88,16 @@ http.createServer( (req, res) => {
       console.log(command)
 
       if (command.search != "") {
-        switch (command.search) {
-          case "?ping":
+        if (command.query.ping) {
           send(pong(), "json")
-          break
-          case "?email":
-          send(handleEmail(command.query.email), "json")
-          break
-          case "?testCard":
-          send(engine().testCard(command.query.testCard), "json")
-          break
-
         }
-
-
-        
+        if (command.query.email) {
+          send(handleEmail(command.query.email), "json")
+        }
+        if (command.query.testCard) {
+          send(engine().testCard(command.query.testCard), "json")}
+        // if (command.query.ping) {
+        //   send(pong(), "json")}
       } else {
         transmitFile(command.path)
       }
