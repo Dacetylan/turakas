@@ -88,13 +88,14 @@ http.createServer( (req, res) => {
       console.log(command)
 
       if (command.search != "") {
-        if (command.query.ping) {
+        let q = command.query
+        if ("ping" in q) {
           send(pong(), "json")
         }
-        if (command.query.email) {
+        if ("email" in q) {
           send(handleEmail(command.query.email), "json")
         }
-        if (command.query.testCard) {
+        if ("testCard" in q) {
           send(engine().testCard(command.query.testCard), "json")}
         // if (command.query.ping) {
         //   send(pong(), "json")}
