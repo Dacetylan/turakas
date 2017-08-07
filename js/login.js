@@ -19,6 +19,9 @@ let fireCmd = (obj) => {
       game[key] = obj[key]
     }
     document.getElementById("waiting").innerHTML = game.registered
+    if (game.registered === 2) {
+      window.location.href = "/game.html"
+    }
   })
 
 }
