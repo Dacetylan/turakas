@@ -10,7 +10,7 @@ document.getElementById("login").onclick = () => {
 }
 
 let fireCmd = (obj) => {
-  console.log(obj)
+  // console.log(obj)
 
   Object.keys(obj).forEach((key) => {
     if (game[key] === obj[key]) {
@@ -18,8 +18,9 @@ let fireCmd = (obj) => {
     } else {
       game[key] = obj[key]
     }
+    document.getElementById("info").innerHTML = JSON.stringify(game)
     document.getElementById("waiting").innerHTML = game.registered
-    if (game.registered === 2) {
+    if (game.registered === 3) {
       window.location.href = "/game.html"
     }
   })

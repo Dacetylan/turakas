@@ -8,7 +8,7 @@ http.createServer( (req, res) => {
     let ip = req.connection.remoteAddress
 
     let pong = () => {
-      return JSON.stringify(game)
+      return JSON.stringify(composeGame(ip).game4Pong())
     }
     let send = (data, type) => {
       res.writeHead(200, {"Content-Type": type})
@@ -45,11 +45,10 @@ http.createServer( (req, res) => {
     let handleEmail = (email) => {
       console.log("handling email")
 
-      return JSON.stringify(composeGame(ip, email))
+      return JSON.stringify(composeGame(ip, email).registerPlayer())
     }
     (function route() {
           let command = url.parse(req.url, true)
-          console.log(command)
     
           if (command.search != "") {
             let q = command.query
@@ -74,9 +73,8 @@ console.log("listening to 1988")
 
 //===========| Here Is State |===========
 
-const game = {
-registered: 0,
-}
+let registered = 0
+const games = []
 const players = []
 const cards = {
   "deck": engine().deck,
@@ -87,37 +85,43 @@ const cards = {
   "muck": [],
 }
 
+
 // =======================================
 
 let composeGame = (ip, email) => {
-  let player = {
-    "ip": ip,
-    "email": email,
-    "hand": []
-  }
-  let checkCanPlayerRegister = () => {
-    if (game.registered === 0) {
+  console.log(registered)
+
+  let registerPlayer = () => {
+    let player = {ip, email}
+    if (players.length === 0) {
+    players.push(player)
+    registered += 1
+    } else if (players[0].ip !== ip) { //add also check for email
       players.push(player)
-      game.registered += 1
-    } 
-    if (game.registered === 1) {
-        if (players[0].ip === ip) {
-          console.log("Player already registered")
-      } else {
-        players.push(player)
-        game.registered += 1
-      }
+      registered += 1
+    } else {
+      console.log("player already registered")
     }
+    return game4Pong()
   }
-  if (email !== undefined) {checkCanPlayerRegister()}
+  let game4Pong = () => {
+    console.log(ip)
+    console.log(players)
+    let game = { registered }
+    if (game.registered > 0 && ip === players[0].ip) {
+      game.player = players[0]
+    } else if (game.registered > 1 && ip === players[1].ip) {
+      game.player = players[1]
+    }
 
+    return game
+  }
 
-  console.log(game)
-  return game
+  return {
+    game4Pong: game4Pong,
+    registerPlayer: registerPlayer,
+  }
 }
-
-
-
 
 function engine() {
 
@@ -126,14 +130,14 @@ function engine() {
 
   let createCards = (suits, ranks) => {
     if (suits.length !== 4) console.log("Error in suits")
-    if (ranks.length !== 9) console.log("Error in suits")
+    if (ranks.length !== 9) console.log("Error in ranks")
     
     let cards = []
     for (rank of ranks) {
       if (rank.length !== 1) console.log("Error in rank")
 
       for (suit of suits) {
-        if (suit.length != 1) console.log("Error in suit")
+        if (suit.length !== 1) console.log("Error in suit")
 
         cards.push(rank + suit)
       }
