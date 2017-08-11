@@ -51,20 +51,21 @@ http.createServer( (req, res) => {
       console.log("Handling command")
       let getArg = () => {
         let argArr = args.split(",")
-        console.log(argArr)
+
         return {
           from: argArr[0],
-          to: argArr[1],
-          howMany: argArr[2],
-          id: argArr[3]
+            to: argArr[1],
+            nr: argArr[2],
+            id: argArr[3],
         }
       }
-      let howMany = getArg().howMany
-      let from    = getArg().from
-      let to      = getArg().to
-      let id      = getArg().id
+      let from = getArg().from
+      let nr   = getArg().nr
+      let to   = getArg().to
+      let id   = getArg().id
+
       return {
-        deal: JSON.stringify(engine().deal(from, to, howMany, id)),
+        deal: JSON.stringify(engine().deal(from, to, nr, id).composeGame),
       }
     }
     (function route() {
@@ -100,7 +101,7 @@ const games = []
 const players = []
 const cards = {
   "deck": engine().deck,
-  "trump": "",
+  "trump": [],
   "p1": [],
   "p2": [],
   "board": [],
@@ -128,11 +129,13 @@ let composeGame = (ip, email) => {
   }
   let game4Pong = () => {
     console.log(ip)
-    console.log(players)
+
     let game = { registered }
     if (game.registered > 0 && ip === players[0].ip) {
+      players[0].hand = cards.p1 
       game.player = players[0]
     } else if (game.registered > 1 && ip === players[1].ip) {
+      players[1].hand = cards.p2 
       game.player = players[1]
     }
 
@@ -185,24 +188,23 @@ function engine() {
     return shuffledDeck
   } //returns shuffled deck
 
-  function deal(from, to, howMany, id ) {
+  function deal(from, to, nr, id ) {
     console.log("dealing")
 
     let temp = []
-    if (id !== undefined && howMany == 1) {
+    if (id !== undefined && nr == 1) {
       temp = cards[from].splice(cards[from].indexOf(id), 1);
       cards[to].push(temp[0]);
     } else {
-      // if (from === "deck" && nr > cards[deck].length) {
-      //   deal(trump, deck, 1)
-      // }
-      temp = cards[from].splice(0, howMany)
+      if (from === "deck" && nr > cards.deck.length) {
+        deal("trump", "deck", 1)
+      }
+      temp = cards[from].splice(0, nr)
       temp.map( (card) => {
         cards[to].push(card)
       })
     }
-    console.log(cards)
-    console.log({"refresh": `${from}, ${to}`})
+
     return {"refresh": `${from}, ${to}`}
   }
   let canItGo = () => {
