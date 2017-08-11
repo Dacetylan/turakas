@@ -63,7 +63,6 @@ http.createServer( (req, res) => {
       let from    = getArg().from
       let to      = getArg().to
       let id      = getArg().id
-      console.log("this we send out"+JSON.stringify(engine().deal(from, to, howMany, id)))
       return {
         deal: JSON.stringify(engine().deal(from, to, howMany, id)),
       }
@@ -189,19 +188,20 @@ function engine() {
   function deal(from, to, howMany, id ) {
     console.log("dealing")
 
-    // let temp = []
-    // if (id !== undefined && nr === 1) {
-    //   temp = cards[from].splice(cards[from].indexOf(id), 1);
-    //   cards[to].push(temp[0]);
-    // } else {
-    //   if (from === "deck" && nr > cards[deck].length) {
-    //     deal(trump, deck, 1)
-    //   }
-    //   temp = cards[from].splice(0, howMany)
-    //   temp.map( (card) => {
-    //     cards[to].push(card)
-    //   })
-    // }
+    let temp = []
+    if (id !== undefined && howMany == 1) {
+      temp = cards[from].splice(cards[from].indexOf(id), 1);
+      cards[to].push(temp[0]);
+    } else {
+      // if (from === "deck" && nr > cards[deck].length) {
+      //   deal(trump, deck, 1)
+      // }
+      temp = cards[from].splice(0, howMany)
+      temp.map( (card) => {
+        cards[to].push(card)
+      })
+    }
+    console.log(cards)
     console.log({"refresh": `${from}, ${to}`})
     return {"refresh": `${from}, ${to}`}
   }
