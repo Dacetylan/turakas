@@ -20,7 +20,7 @@ let fireCmd = (obj) => {
     }
     document.getElementById("info").innerHTML = JSON.stringify(game)
     document.getElementById("waiting").innerHTML = game.registered
-    if (game.registered === 3) {
+    if (game.registered === 2) {
       window.location.href = "/game.html"
     }
   })

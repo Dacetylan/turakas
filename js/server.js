@@ -27,7 +27,7 @@ http.createServer( (req, res) => {
                                            answerType: "text"}
         if (path === "/css/login.css") return {address: "./css/login.css",
                                            answerType: "text/css"}
-        if (path === "/css/v1.css")    return {address: "./css/v1.css",
+        if (path === "/css/game.css")    return {address: "css/game.css",
                                            answerType: "text/css"}
         if (path === "/js/client.js")  return {address: "./js/client.js",
                                            answerType: "text/javascript"}
@@ -47,9 +47,30 @@ http.createServer( (req, res) => {
 
       return JSON.stringify(composeGame(ip, email).registerPlayer())
     }
+    let handleCmd = (args) => {
+      console.log("Handling command")
+      let getArg = () => {
+        let argArr = args.split(",")
+        console.log(argArr)
+        return {
+          from: argArr[0],
+          to: argArr[1],
+          howMany: argArr[2],
+          id: argArr[3]
+        }
+      }
+      let howMany = getArg().howMany
+      let from    = getArg().from
+      let to      = getArg().to
+      let id      = getArg().id
+      console.log("this we send out"+JSON.stringify(engine().deal(from, to, howMany, id)))
+      return {
+        deal: JSON.stringify(engine().deal(from, to, howMany, id)),
+      }
+    }
     (function route() {
           let command = url.parse(req.url, true)
-    
+          console.log(command)
           if (command.search != "") {
             let q = command.query
             if ("ping" in q) {
@@ -59,7 +80,9 @@ http.createServer( (req, res) => {
               send(handleEmail(command.query.email), "json")
             }
             if ("deal" in q) {
-              send(engine().deal(command.query.deal, game), "json")}
+              send(handleCmd(command.query.deal).deal, "json")
+              // send(engine().deal(command.query.deal), "json")
+            }
           } else {
             transmitFile(command.path)
           }
@@ -163,15 +186,34 @@ function engine() {
     return shuffledDeck
   } //returns shuffled deck
 
-  let deal = () => {
-    return "dealt"
+  function deal(from, to, howMany, id ) {
+    console.log("dealing")
+
+    // let temp = []
+    // if (id !== undefined && nr === 1) {
+    //   temp = cards[from].splice(cards[from].indexOf(id), 1);
+    //   cards[to].push(temp[0]);
+    // } else {
+    //   if (from === "deck" && nr > cards[deck].length) {
+    //     deal(trump, deck, 1)
+    //   }
+    //   temp = cards[from].splice(0, howMany)
+    //   temp.map( (card) => {
+    //     cards[to].push(card)
+    //   })
+    // }
+    console.log({"refresh": `${from}, ${to}`})
+    return {"refresh": `${from}, ${to}`}
   }
-  let testCard = () => {
-    return "tested"
+  let canItGo = () => {
+    
+    //return true or false
   }
-  
+
+
+
   return {
     deck: shuffle(createCards(suits, ranks)),
-    deal: deal()
+    deal: deal
   }
 }
