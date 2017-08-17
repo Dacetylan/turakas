@@ -11,6 +11,7 @@ http.createServer( (req, res) => {
       return JSON.stringify(composeGame(ip).game4Pong())
     }
     let send = (data, type) => {
+      console.log(data)
       res.writeHead(200, {"Content-Type": type})
       res.end(data)
     }
@@ -65,7 +66,7 @@ http.createServer( (req, res) => {
       let id   = getArg().id
 
       return {
-        deal: JSON.stringify(engine().deal(from, to, nr, id).composeGame),
+        deal: JSON.stringify(composeGame(ip, "email", engine().deal(from, to, nr, id)).refresh()),
       }
     }
     (function route() {
@@ -111,7 +112,7 @@ const cards = {
 
 // =======================================
 
-let composeGame = (ip, email) => {
+let composeGame = (ip, email, engineRes) => {
   console.log(registered)
 
   let registerPlayer = () => {
@@ -142,9 +143,17 @@ let composeGame = (ip, email) => {
     return game
   }
 
+  let refresh = () => {
+    let game = game4Pong()
+    game.refresh = engineRes
+    return game
+  }
+
+
   return {
     game4Pong: game4Pong,
     registerPlayer: registerPlayer,
+    refresh: refresh
   }
 }
 
@@ -205,7 +214,7 @@ function engine() {
       })
     }
 
-    return {"refresh": `${from}, ${to}`}
+    return `${from}, ${to}`
   }
   let canItGo = () => {
     
