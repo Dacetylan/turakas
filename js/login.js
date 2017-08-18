@@ -1,13 +1,23 @@
 let game = {
+  status: "registering",
   registered: 0,
+  players: [],
 }
 
 
 document.getElementById("waiting").innerHTML = game.registered
+
 document.getElementById("login").onclick = () => {
   let email = document.getElementById("email").value
-  transmit("?email=" + email)
+
+  if (game.registered === 0) {
+    game.players.push( {email} )
+    game.registered += 1
+    console.log()
+    transmit("?cmd=" + JSON.stringify(game))
+  }
 }
+
 
 let fireCmd = (obj) => {
   // console.log(obj)
@@ -42,6 +52,7 @@ let poll = () => {
 poll()
 
 let transmit = (url) => {
+  console.log(url)
   let request = new XMLHttpRequest()
   request.open("GET", url, true);
   request.onload = function() {

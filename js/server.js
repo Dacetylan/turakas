@@ -70,18 +70,18 @@ http.createServer( (req, res) => {
       }
     }
     (function route() {
+
           let command = url.parse(req.url, true)
-          console.log(command)
+          console.log(typeof command.search)
+          console.log(command.query)
           if (command.search != "") {
             let q = command.query
+            console.log("this is QUUUUUUUUUUUUUU"+q)
             if ("ping" in q) {
               send(pong(), "json")
             }
-            if ("email" in q) {
-              send(handleEmail(command.query.email), "json")
-            }
-            if ("deal" in q) {
-              send(handleCmd(command.query.deal).deal, "json")
+            if ("game" in q) {
+              send(handleEmail(command.query.game), "json")
             }
           } else {
             transmitFile(command.path)
@@ -98,6 +98,9 @@ console.log("listening to 1988")
 
 let registered = 0
 const games = []
+const game = {
+  status: "sleeping"
+}
 const gameStart = false
 const players = []
 const cards = {
@@ -132,13 +135,6 @@ let composeGame = (ip, email, engineRes) => {
     console.log(ip)
 
     let game = { registered }
-
-    if (game.registered === 2) {
-      console.log("doing smth here")
-      engine().deal("deck", "p1", 6)
-      engine().deal("deck", "p2", 6)
-      engine().deal("deck", "trump", 1)
-    }
 
     if (game.registered > 0 && ip === players[0].ip) {
       players[0].hand = cards.p1 

@@ -1,11 +1,15 @@
 let game = {
+  status: "registering",
   registered: 0,
+  players: [],
 }
 
 document.getElementById("send").onclick = () => {
   let cmd = document.getElementById("cmd").value
   transmit("?deal=" + cmd)
 }
+
+  
 
 
 
