@@ -82,7 +82,6 @@ http.createServer( (req, res) => {
             }
             if ("deal" in q) {
               send(handleCmd(command.query.deal).deal, "json")
-              // send(engine().deal(command.query.deal), "json")
             }
           } else {
             transmitFile(command.path)
@@ -99,6 +98,7 @@ console.log("listening to 1988")
 
 let registered = 0
 const games = []
+const gameStart = false
 const players = []
 const cards = {
   "deck": engine().deck,
@@ -132,6 +132,14 @@ let composeGame = (ip, email, engineRes) => {
     console.log(ip)
 
     let game = { registered }
+
+    if (game.registered === 2) {
+      console.log("doing smth here")
+      engine().deal("deck", "p1", 6)
+      engine().deal("deck", "p2", 6)
+      engine().deal("deck", "trump", 1)
+    }
+
     if (game.registered > 0 && ip === players[0].ip) {
       players[0].hand = cards.p1 
       game.player = players[0]

@@ -75,15 +75,12 @@ function refresh(from, to) {
       case "p1":
       draw(game.player.hand, "player")
       break
-      // case "board":
-      // draw(board, "board")
-      // break
-      // case "muck":
-      // draw(muck, "muck")
-      // break
-      // case "trump":
-      // draw(trump, "trump")
-      // break
+      case "board":
+      draw(board, "board")
+      break
+      case "trump":
+      draw(trump, "trump")
+      break
     }
     console.log("did not find jackshit")
   })
