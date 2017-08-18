@@ -1,62 +1,63 @@
-let game = {
+const game = {
   status: "registering",
-  registered: 0,
-  players: [],
+  player: [],
 }
 
-
-document.getElementById("waiting").innerHTML = game.registered
-
-document.getElementById("login").onclick = () => {
+let login = function() {
   let email = document.getElementById("email").value
 
-  if (game.registered === 0) {
-    game.players.push( {email} )
-    game.registered += 1
-    console.log()
-    transmit("?cmd=" + JSON.stringify(game))
-  }
+  transmit(updateGame( { "player": [{email}] }))
+  if (game.status === "registering") {poll()}
 }
 
+function updateGame(gameIn) {
+  if (game == gameIn) {console.log("games are the same")}
 
-let fireCmd = (obj) => {
-  // console.log(obj)
-
-  Object.keys(obj).forEach((key) => {
-    if (game[key] === obj[key]) {
-      console.log("same key")
+  Object.keys(gameIn).forEach( (key) => {
+    if (game[key] === gameIn[key]) {
+      console.log("Key is equal")
     } else {
-      game[key] = obj[key]
-    }
-    document.getElementById("info").innerHTML = JSON.stringify(game)
-    document.getElementById("waiting").innerHTML = game.registered
-    if (game.registered === 2) {
-      window.location.href = "/game.html"
+      console.log(game[key], gameIn[key])
+      game[key] = gameIn[key]
+      console.log(`${key} updated`)
     }
   })
 
+  update("waiting", game.player.length)
+  update("info", JSON.stringify(game))
+
+  return game
 }
 
-let poll = () => {
-   setTimeout( () => {
-      let request = new XMLHttpRequest()
-      request.open("GET", "?ping", true);
-      request.onload = function() {
-        fireCmd(JSON.parse(request.responseText))
-         // console.log(request)
-         poll()
-      }
-   request.send()
-   }, 2000)
-}
-poll()
-
-let transmit = (url) => {
+function transmit(url) {
   console.log(url)
+
+  url = "?game=" + JSON.stringify(url)
   let request = new XMLHttpRequest()
   request.open("GET", url, true);
   request.onload = function() {
-    fireCmd(JSON.parse(request.responseText))
+    updateGame(JSON.parse(request.responseText))
   }
   request.send()
 }
+let poll = () => {
+  setInterval( () => {
+      transmit(game)
+  }, 2000)
+}
+
+//update some DOM element
+function update(element, data) {
+  document.getElementById(element).innerHTML = data
+}
+
+
+
+//add listeners for buttons and such
+document.getElementById("login").onclick = login
+
+
+
+
+
+

@@ -7,11 +7,8 @@ http.createServer( (req, res) => {
     console.log("request made")
     let ip = req.connection.remoteAddress
 
-    let pong = () => {
-      return JSON.stringify(composeGame(ip).game4Pong())
-    }
     let send = (data, type) => {
-      console.log(data)
+      console.log("sending: " + data)
       res.writeHead(200, {"Content-Type": type})
       res.end(data)
     }
@@ -43,47 +40,18 @@ http.createServer( (req, res) => {
         send(rawFile, chooseFile().answerType)  
       })
     }
-    let handleEmail = (email) => {
-      console.log("handling email")
+    let handleGame = (game) => {
+      console.log("game status: " + game.status)
 
-      return JSON.stringify(composeGame(ip, email).registerPlayer())
-    }
-    let handleCmd = (args) => {
-      console.log("Handling command")
-      let getArg = () => {
-        let argArr = args.split(",")
-
-        return {
-          from: argArr[0],
-            to: argArr[1],
-            nr: argArr[2],
-            id: argArr[3],
-        }
-      }
-      let from = getArg().from
-      let nr   = getArg().nr
-      let to   = getArg().to
-      let id   = getArg().id
-
-      return {
-        deal: JSON.stringify(composeGame(ip, "email", engine().deal(from, to, nr, id)).refresh()),
-      }
+      return JSON.stringify(composeGame(ip, game, game.status))
     }
     (function route() {
-
           let command = url.parse(req.url, true)
-          console.log(typeof command.search)
-          console.log(command.query)
+
           if (command.search != "") {
-            let q = command.query
-            console.log("this is QUUUUUUUUUUUUUU"+q)
-            if ("ping" in q) {
-              send(pong(), "json")
-            }
-            if ("game" in q) {
-              send(handleEmail(command.query.game), "json")
-            }
+            send(handleGame(JSON.parse(command.query.game)), "json")
           } else {
+            console.log("routing to file transfer")
             transmitFile(command.path)
           }
     })(req)
@@ -96,13 +64,8 @@ console.log("listening to 1988")
 
 //===========| Here Is State |===========
 
-let registered = 0
-const games = []
-const game = {
-  status: "sleeping"
-}
-const gameStart = false
-const players = []
+
+const games = [] 
 const cards = {
   "deck": engine().deck,
   "trump": [],
@@ -115,49 +78,28 @@ const cards = {
 
 // =======================================
 
-let composeGame = (ip, email, engineRes) => {
-  console.log(registered)
+let composeGame = (ip, game, status) => {
+  console.log("composing game")
 
-  let registerPlayer = () => {
-    let player = {ip, email}
-    if (players.length === 0) {
-    players.push(player)
-    registered += 1
-    } else if (players[0].ip !== ip) { //add also check for email
-      players.push(player)
-      registered += 1
-    } else {
-      console.log("player already registered")
-    }
-    return game4Pong()
-  }
-  let game4Pong = () => {
-    console.log(ip)
-
-    let game = { registered }
-
-    if (game.registered > 0 && ip === players[0].ip) {
-      players[0].hand = cards.p1 
-      game.player = players[0]
-    } else if (game.registered > 1 && ip === players[1].ip) {
-      players[1].hand = cards.p2 
-      game.player = players[1]
-    }
-
-    return game
-  }
-
-  let refresh = () => {
-    let game = game4Pong()
-    game.refresh = engineRes
-    return game
-  }
-
-
-  return {
-    game4Pong: game4Pong,
-    registerPlayer: registerPlayer,
-    refresh: refresh
+  switch (status) {
+    case "registering":
+      if (games[0]) {composeGame(ip, game, "ready")}
+      game.status = "queued"
+      game.p1 = ip
+      games.push(game)
+      return games[0]
+    break
+    case "queued":
+      return games[0]
+    break
+    case "ready":
+      games[0].p2 = ip
+      games[0].status = "starting"
+      games[0].player.push(game.player[0])
+      return games[0]
+    break
+    case "starting":
+      return games[0]
   }
 }
 
