@@ -34,19 +34,33 @@ function updateGame(gameIn) {
   if (game.refresh) {
     let args = game.refresh.split(", ")
     refresh(args)
+    delete game.refresh
   }
 
   if (game.status === "finished") {alert("Game over")}
 
   update("info", JSON.stringify(game))
+  update("villain", game.villain)
 
   return game
 }
+
+
 
 function update(element, data) {
   document.getElementById(element).innerHTML = data
 }
 
+
+let send = function() {
+  let cmd= document.getElementById("cmd").value
+
+  transmit({
+    status: "playing",
+    deal: cmd})
+}
+
+document.getElementById("send").onclick = send
 
 
 function refresh(args) {

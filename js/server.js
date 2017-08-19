@@ -46,12 +46,13 @@ http.createServer( (req, res) => {
       if (game.deal) {
         let argArr = game.deal.split(",")
 
-        let from: argArr[0]
-        let   to: argArr[1]
-        let   nr: argArr[2]
-        let   id: argArr[3]
+        let from = argArr[0]
+        let   to = argArr[1]
+        let   nr = argArr[2]
+        let   id = argArr[3]
 
         engine().deal(from, to, nr, id)
+        delete game.deal
       }
       return JSON.stringify(composeGame(ip, game, game.status))
     }
@@ -161,9 +162,7 @@ let composeGame = (ip, game, status) => {
     game.trump = cards.trump
     game.board = cards.board
     game.status = "playing"
-    game.refresh = () => {
-
-    }
+    game.refresh = "hero, board, trump"
     return game
   }
 
