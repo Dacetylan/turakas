@@ -16,7 +16,7 @@ function transmit(url) {
 let poll = () => {
   setInterval( () => {
       transmit(game)
-  }, 5000)
+  }, 2000)
 }
 poll()
 

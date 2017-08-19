@@ -179,12 +179,13 @@ let composeGame = (ip, game, status) => {
     game.trump = cards.trump
     game.board = cards.board
     game.deck = cards.deck.length
+    game.muck = cards.muck.length
     game.ref = referee
     game.status = "playing"
     game.refresh = "hero, board, trump"
     //victory condition
     if (cards.deck.length === 0
-        && cards.trump.lenght === 0
+        && cards.trump.length === 0
         && game.hero.length === 0) {
       game.status = "finished"
     }
@@ -260,9 +261,10 @@ function engine() {
             }
           }
         } else if (killer === from && board.length % 2 !== 0) {
-          let attacker = board[board.length -1];
-          let attackerSuit = attacker[1];
-          let attackerRank = attacker[0];
+          let attacker = board[board.length -1]
+          let attackerSuit = attacker[1]
+          let attackerRank = attacker[0]
+          let trumpSuit = referee.trumpSuit
 
           if ((suit === attackerSuit && rank > attackerRank) || suit === trumpSuit && attackerSuit !== trumpSuit) {
             console.log(`${from} kills attacker`)
@@ -282,6 +284,13 @@ function engine() {
     } else {
       referee.whoseMove = "p1"
     }
+  }
+  function changeKiller() {
+    if (referee.killer === "p1") {
+      referee.killer = "p2"
+    } else {
+      referee.killer = "p1"
+    }    
   }
 
   function deal(from, to, nr, id) {
@@ -305,17 +314,20 @@ function engine() {
   }
   function clearBoard(from, to, nr) {
     deal(from, to, nr)
-    endRound()
+    endRound(to)
   }
-  function endRound() {
-    referee.round += 1
-    if (cards.p1.length < 6) deal(deck, p1, 6 - cards.p1.length)
-    if (cards.p1.length < 6) deal(deck, p2, 6 - cards.p2.length)
-    if (referee.killer === "p1") {
-      referee.killer = "p2"
+  function endRound(to) {
+    if (to === "muck") {
+      whoseMove()
+      changeKiller()
     } else {
-      referee.killer = "p1"
+      whoseMove()
     }
+
+    referee.round += 1
+    if (cards.p1.length < 6) {deal("deck", "p1", 6 - cards.p1.length)}
+    if (cards.p2.length < 6) {deal("deck", "p2", 6 - cards.p2.length)}
+    
   }
   return {
     deck: shuffle(createCards(suits, ranks)),
