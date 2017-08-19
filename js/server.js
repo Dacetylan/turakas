@@ -85,6 +85,13 @@ const cards = {
   "board": [],
   "muck": [],
 }
+const referee = {
+  round: 1
+  killer: 2,
+  whosMove: 1,
+  cardsOnBoard: 0,
+  trumpSuit: cards.trump[0][1]
+}
 
 // =======================================
 
@@ -103,7 +110,6 @@ let composeGame = (ip, game, status) => {
       dealGame() //deal cards to start game
       return prepGame()
     break
-    case "setup":
     case "playing":
       return updateStatus()
     break
@@ -161,6 +167,7 @@ let composeGame = (ip, game, status) => {
     }
     game.trump = cards.trump
     game.board = cards.board
+    game.ref = referee
     game.status = "playing"
     game.refresh = "hero, board, trump"
     return game

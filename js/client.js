@@ -1,5 +1,5 @@
 const game = {
-  status: "setup"
+  status: "playing"
 }
 
 function transmit(url) {
@@ -39,7 +39,10 @@ function updateGame(gameIn) {
 
   if (game.status === "finished") {alert("Game over")}
 
-  update("info", JSON.stringify(game))
+  update("info", JSON.stringify(game.players))
+  update("round", JSON.stringify(game.ref.round))
+  update("whoseMove", JSON.stringify(game.ref.whoseMove))
+  update("killer", JSON.stringify(game.ref.killer))
   update("villain", game.villain)
 
   return game
