@@ -23,55 +23,62 @@ poll()
 function updateGame(gameIn) {
   Object.keys(gameIn).forEach( (key) => {
     if (game[key] === gameIn[key]) {
-      console.log("Key is equal")
+      // console.log("Key is equal")
     } else {
-      console.log(game[key], gameIn[key])
+      // console.log(game[key], gameIn[key])
       game[key] = gameIn[key]
-      console.log(`${key} updated`)
+      // console.log(`${key} updated`)
     }
   })
+
 
   if (game.refresh) {
     let args = game.refresh.split(", ")
     refresh(args)
     delete game.refresh
   }
+  if (game.status === "finished") {alert("You Win the Game!")}
 
-  if (game.status === "finished") {alert("Game over")}
-
-  update("info", JSON.stringify(game.players))
-  update("round", JSON.stringify(game.ref.round))
-  update("whoseMove", JSON.stringify(game.ref.whoseMove))
-  update("killer", JSON.stringify(game.ref.killer))
+  update("players", JSON.stringify(game.players))
+  
+  update("round", game.ref.round)
+  update("whoseMove", game.ref.whoseMove)
+  update("killer", game.ref.killer)
   update("villain", game.villain)
 
   return game
 }
-
-
 
 function update(element, data) {
   document.getElementById(element).innerHTML = data
 }
 
 
-let send = function() {
-  let cmd= document.getElementById("cmd").value
-
-  transmit({
+let pickUp = function() {
+  if (game.board.length > 0) {
+    transmit({
+      status: "playing",
+      clearBoard: `board,${game.ref.whoseMove},${game.board.length}`})
+  }
+}
+let muck = function() {
+  if (game.board.length > 0) {
+    transmit({
     status: "playing",
-    deal: cmd})
+    clearBoard: `board,muck,${game.board.length}`})
+  } else return
 }
 
-document.getElementById("send").onclick = send
+document.getElementById("pickUp").onclick = pickUp
+document.getElementById("muck").onclick = muck
 
 
 function refresh(args) {
-  console.log(args);
+  // console.log(args);
   // args = [from, to]
   args.forEach(function(element) 
   {
-    console.log(element)
+    // console.log(element)
     switch (element)
     {
       case "hero":
@@ -84,12 +91,12 @@ function refresh(args) {
       draw(game.trump, "trump")
       break
     }
-    console.log("did not find jackshit")
   })
+  addListeners()
 }
 
 function draw (arr, str) {
-  console.log(arr, str);
+  // console.log(arr, str);
   document.getElementById(str).innerHTML = "";
   for (var i = 0; i < arr.length; i++) {
     var div = document.createElement("div");
@@ -114,5 +121,35 @@ function draw (arr, str) {
     }
 
     document.getElementById(str).appendChild(div);
+  }
+}
+
+function getId() {
+   console.log(this.id)
+   let id = this.id
+
+   cardSelector(id)
+}
+//Lets make the game playable. Next is how to select the card with a mouse
+function addListeners () {  
+   //this var has an array of all the clickable cards
+   var selectedCard = document.getElementsByClassName("card");
+   // we loop through the cards and add eventlisteners
+   for (var i = 0; i < selectedCard.length; i++) {
+      selectedCard[i].addEventListener("click", getId, false);
+   }
+}  
+addListeners()
+
+function cardSelector (id) {
+  console.log('cardSelector ' + id)
+   //checks if given ID exists in the player arrays
+  if (game.hero.indexOf(id) !== -1) {
+      transmit({
+        status: "playing",
+        test: `${game.playerId},board,1,${id}`
+      })
+  } else {
+    console.log("Not your card")
   }
 }

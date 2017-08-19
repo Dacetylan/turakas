@@ -8,24 +8,23 @@
   <div id="villain">Villain</div>
   <div id="board">Board</div>
   <div id="trump">Trump</div>
-  <div id="deck">Deck</div>
-  <div id="muck">Muck</div>
+  <div id="pickUp" class="btn">Pick up cards</div>
+  <div id="muck" class="btn">Muck cards</div>
   <div id="player">Player</div>
   
   <form onsubmit="return false">
-    <input id="cmd" value="deck,p1,1"/>
+    <input id="cmd" value="p1,board,1"/>
     <button id="send">send</button>
   </form>
   <div id="info">
-    <p>
-      <span id="round"></span>
-    </p>
-    <p>
-      <span id="whoseMove"></span>
-    </p>
-    <p>
-      <span id="killer"></span>
-    </p>
+    Players: 
+    <span id="players"></span><br>
+    Round: 
+    <span id="round"></span>
+    Whose move: 
+    <span id="whoseMove"></span>
+    Killer: 
+    <span id="killer"></span>
   </div>
 	<script type="text/javascript" src="js/client.js"></script>
 </body>

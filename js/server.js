@@ -8,7 +8,7 @@ http.createServer( (req, res) => {
     let ip = req.connection.remoteAddress
 
     let send = (data, type) => {
-      console.log("sending: " + data)
+      // console.log("sending: " + data)
       res.writeHead(200, {"Content-Type": type})
       res.end(data)
     }
@@ -43,16 +43,26 @@ http.createServer( (req, res) => {
     let handleGame = (game) => {
       console.log("game status: " + game.status)
 
-      if (game.deal) {
-        let argArr = game.deal.split(",")
+      if (game.clearBoard) {
+        let argArr = game.clearBoard.split(",")
+
+        let from = argArr[0]
+        let   to = argArr[1]
+        let   nr = argArr[2]
+
+        engine().clearBoard(from, to, nr)
+        delete game.clearBoard
+      }
+      if (game.test) {
+        let argArr = game.test.split(",")
 
         let from = argArr[0]
         let   to = argArr[1]
         let   nr = argArr[2]
         let   id = argArr[3]
 
-        engine().deal(from, to, nr, id)
-        delete game.deal
+        engine().test(from, to, nr, id)
+        delete game.test
       }
       return JSON.stringify(composeGame(ip, game, game.status))
     }
@@ -86,11 +96,10 @@ const cards = {
   "muck": [],
 }
 const referee = {
-  round: 1
-  killer: 2,
-  whosMove: 1,
-  cardsOnBoard: 0,
-  trumpSuit: cards.trump[0][1]
+  round: 1,
+  killer: "p2",
+  whoseMove: "p1",
+  trumpSuit: "",
 }
 
 // =======================================
@@ -108,6 +117,7 @@ let composeGame = (ip, game, status) => {
     break
     case "full":
       dealGame() //deal cards to start game
+      referee.trumpSuit = cards.trump[0][1]
       return prepGame()
     break
     case "playing":
@@ -117,12 +127,12 @@ let composeGame = (ip, game, status) => {
 
   function registerPlayer() {
     //if smb in queue, game is full
-    console.log("registering player")
+    // console.log("registering player")
     if (queue[0]) {
-      console.log("game full")
+      // console.log("game full")
       return composeGame(ip, game, "full")
       } else {
-      console.log("game queued")
+      // console.log("game queued")
       //if first player, add to queue
       game.players.p1 = ip
       game.status = "queued"
@@ -152,24 +162,32 @@ let composeGame = (ip, game, status) => {
   function updateStatus() {
     console.log("updating status")
     game = games[0]
-    console.log(game.players.p1 === ip)
+    // console.log(game.players.p1 === ip)
     if (game.players.p1 === ip) {
-      console.log("p1" + ip)
+      // console.log("p1" + ip)
       updateCards("p1", "p2")
     } else {
-      console.log("p2" + ip)
+      // console.log("p2" + ip)
       updateCards("p2", "p1")
     }
     function updateCards(hero, villain) {
-      console.log(`${hero}, ${villain}`)
+      // console.log(`${hero}, ${villain}`)
+      game.playerId = hero
       game.hero = cards[hero]
       game.villain = cards[villain].length
     }
     game.trump = cards.trump
     game.board = cards.board
+    game.deck = cards.deck.length
     game.ref = referee
     game.status = "playing"
     game.refresh = "hero, board, trump"
+    //victory condition
+    if (cards.deck.length === 0
+        && cards.trump.lenght === 0
+        && game.hero.length === 0) {
+      game.status = "finished"
+    }
     return game
   }
 
@@ -216,7 +234,57 @@ function engine() {
     return shuffledDeck
   } //returns shuffled deck
 
-  function deal(from, to, nr, id ) {
+  function test(from, to, nr, id) {
+    let suit = id[1]
+    let rank = id[0]
+    let board = cards.board
+    let moves = referee.whoseMove
+    let killer = referee.killer
+    //we only want to act if there is one card with specific id
+    if (nr == 1 && id !== undefined) {
+      //if it is your turn
+      if (moves === from) {
+        //if you are not the killer and the board is empty
+        if (killer !== from && board.length === 0) {
+          console.log(`${from} moves first card to board`)
+          deal(from, to, nr, id)
+          whoseMove()
+        } else if (killer !== from && board.length > 0) {
+          //test if among all the cards on board is the one u want to add
+          for (let i = 0; i < board.length; i++) {
+            if (rank === board[i][0]) {
+              console.log(`${from} adds attacker to board`)
+              deal(from, to, nr, id)
+              whoseMove()
+              break
+            }
+          }
+        } else if (killer === from && board.length % 2 !== 0) {
+          let attacker = board[board.length -1];
+          let attackerSuit = attacker[1];
+          let attackerRank = attacker[0];
+
+          if ((suit === attackerSuit && rank > attackerRank) || suit === trumpSuit && attackerSuit !== trumpSuit) {
+            console.log(`${from} kills attacker`)
+            deal(from, to, nr, id)
+            whoseMove()
+          } else {
+            console.log(`${from}, pick a better card`)
+          }
+        }
+      }
+    }
+  }
+
+  function whoseMove() {
+    if (referee.whoseMove === "p1") {
+      referee.whoseMove = "p2"
+    } else {
+      referee.whoseMove = "p1"
+    }
+  }
+
+  function deal(from, to, nr, id) {
     console.log("dealing")
 
     let temp = []
@@ -235,15 +303,24 @@ function engine() {
 
     return `${from}, ${to}`
   }
-  let canItGo = () => {
-    
-    //return true or false
+  function clearBoard(from, to, nr) {
+    deal(from, to, nr)
+    endRound()
   }
-
-
-
+  function endRound() {
+    referee.round += 1
+    if (cards.p1.length < 6) deal(deck, p1, 6 - cards.p1.length)
+    if (cards.p1.length < 6) deal(deck, p2, 6 - cards.p2.length)
+    if (referee.killer === "p1") {
+      referee.killer = "p2"
+    } else {
+      referee.killer = "p1"
+    }
+  }
   return {
     deck: shuffle(createCards(suits, ranks)),
-    deal: deal
+    deal: deal,
+    test: test,
+    clearBoard: clearBoard,
   }
 }
