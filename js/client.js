@@ -1,71 +1,24 @@
-let game = {
-  status: "registering",
-  registered: 0,
-  players: [],
+const game = {
+  status: "setup"
 }
 
-document.getElementById("send").onclick = () => {
-  let cmd = document.getElementById("cmd").value
-  transmit("?deal=" + cmd)
-}
+function transmit(url) {
+  console.log(url)
 
-  
-
-
-
-
-let fireCmd = (obj) => {
-  // console.log(obj)
-  document.getElementById("info").innerHTML = JSON.stringify(obj)
-
-  Object.keys(obj).forEach((key) => {
-    if (game[key] === obj[key]) {
-      console.log("same key")
-    } else {
-      game[key] = obj[key]
-    }
-    document.getElementById("info").innerHTML = JSON.stringify(game)
-    if (game.refresh !== undefined) {
-      let getArg = () => {
-          let argArr = game.refresh.split(", ")
-
-          return {
-            from: argArr[0],
-              to: argArr[1],
-          }
-        }
-        let from = getArg().from
-        let to   = getArg().to
-      refresh(from, to)
-      delete game.refresh
-    }
-  })
-}
-
-let poll = () => {
-   setTimeout( () => {
-      let request = new XMLHttpRequest()
-      request.open("GET", "?ping", true);
-      request.onload = function() {
-        fireCmd(JSON.parse(request.responseText))
-         // console.log(request)
-         poll()
-      }
-   request.send()
-   }, 2000)
-}
-poll()
-
-let transmit = (url) => {
+  url = "?game=" + JSON.stringify(url)
   let request = new XMLHttpRequest()
   request.open("GET", url, true);
   request.onload = function() {
-    fireCmd(JSON.parse(request.responseText))
+    updateGame(JSON.parse(request.responseText))
   }
   request.send()
 }
-
-
+let poll = () => {
+  setInterval( () => {
+      transmit(game)
+  }, 2000)
+}
+poll()
 
 
 function refresh(from, to) {

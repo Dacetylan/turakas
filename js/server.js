@@ -98,8 +98,6 @@ let composeGame = (ip, game, status) => {
       games[0].player.push(game.player[0])
       return games[0]
     break
-    case "starting":
-      return games[0]
   }
 }
 
