@@ -84,8 +84,8 @@ let composeGame = (ip, game, status) => {
   switch (status) {
     case "registering":
       if (games[0]) {composeGame(ip, game, "ready")}
+      game.players[0].ip = ip
       game.status = "queued"
-      game.p1 = ip
       games.push(game)
       return games[0]
     break
@@ -93,12 +93,42 @@ let composeGame = (ip, game, status) => {
       return games[0]
     break
     case "ready":
-      games[0].p2 = ip
+      dealGame()
+      games[0].players.email = game.players[0].email
       games[0].status = "starting"
-      games[0].player.push(game.player[0])
+      games[0].players.push(game.players[0])
+      return games[0]
+    break
+    case "setup":
+      game = games[0]
+      if (game.players[0].ip === ip) {
+        console.log("here" + ip)
+        game.hero = cards.p1
+        game.villain = cards.p2.length
+      } else if (ip === game.players[1].ip) {
+        console.log("there" + ip)
+        game.hero = cards.p2
+        game.villain = cards.p1.length
+      }
+      console.log(game)
+      game.trump = cards.trump
+      game.board = cards.board
+      game.refresh = "hero, villain, trump"
+      game.status = "playing"
+      games[0] = game
+      console.log("we have game or maybe we do"+game)
+      return games[0]
+    break
+    case "playing":
       return games[0]
     break
   }
+}
+
+function dealGame(ip, game) {
+  engine().deal("deck", "p1", 6)
+  engine().deal("deck", "p2", 6)
+  engine().deal("deck", "trump", 1)
 }
 
 function engine() {

@@ -20,6 +20,29 @@ let poll = () => {
 }
 poll()
 
+function updateGame(gameIn) {
+  Object.keys(gameIn).forEach( (key) => {
+    if (game[key] === gameIn[key]) {
+      console.log("Key is equal")
+    } else {
+      console.log(game[key], gameIn[key])
+      game[key] = gameIn[key]
+      console.log(`${key} updated`)
+    }
+  })
+
+  if (game.status === "finished") {alert("Game over")}
+
+  update("info", JSON.stringify(game))
+
+  return game
+}
+
+function update(element, data) {
+  document.getElementById(element).innerHTML = data
+}
+
+
 
 function refresh(from, to) {
   console.log(from, to);
