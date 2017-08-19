@@ -43,6 +43,16 @@ http.createServer( (req, res) => {
     let handleGame = (game) => {
       console.log("game status: " + game.status)
 
+      if (game.deal) {
+        let argArr = game.deal.split(",")
+
+        let from: argArr[0]
+        let   to: argArr[1]
+        let   nr: argArr[2]
+        let   id: argArr[3]
+
+        engine().deal(from, to, nr, id)
+      }
       return JSON.stringify(composeGame(ip, game, game.status))
     }
     (function route() {
@@ -85,7 +95,8 @@ let composeGame = (ip, game, status) => {
       return registerPlayer()
     break
     case "queued":
-      return queue[0]
+      if (games.length > 0) return games[0]
+                       else return queue[0]
     break
     case "full":
       dealGame() //deal cards to start game
@@ -99,15 +110,23 @@ let composeGame = (ip, game, status) => {
 
   function registerPlayer() {
     //if smb in queue, game is full
+    console.log("registering player")
     if (queue[0]) {
+      console.log("game full")
       return composeGame(ip, game, "full")
-    } else {
+      } else {
+      console.log("game queued")
       //if first player, add to queue
       game.players.p1 = ip
       game.status = "queued"
       queue.push(game)
       return game
     }
+  }
+  function dealGame() {
+    engine().deal("deck", "p1", 6)
+    engine().deal("deck", "p2", 6)
+    engine().deal("deck", "trump", 1)
   }
   function prepGame() {
     //take game from queue
@@ -124,27 +143,30 @@ let composeGame = (ip, game, status) => {
     return game
   }
   function updateStatus() {
+    console.log("updating status")
     game = games[0]
-    if (game.players.p1.ip === ip) {
+    console.log(game.players.p1 === ip)
+    if (game.players.p1 === ip) {
+      console.log("p1" + ip)
       updateCards("p1", "p2")
     } else {
+      console.log("p2" + ip)
       updateCards("p2", "p1")
     }
-    let updateCards = (hero, villain) => {
+    function updateCards(hero, villain) {
+      console.log(`${hero}, ${villain}`)
       game.hero = cards[hero]
       game.villain = cards[villain].length
     }
     game.trump = cards.trump
     game.board = cards.board
     game.status = "playing"
+    game.refresh = () => {
 
+    }
     return game
   }
-  function dealGame() {
-    engine().deal("deck", "p1", 6)
-    engine().deal("deck", "p2", 6)
-    engine().deal("deck", "trump", 1)
-  }
+
 }
 
 

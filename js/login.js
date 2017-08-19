@@ -17,7 +17,6 @@ function updateGame(gameIn) {
     if (game[key] === gameIn[key]) {
       console.log("Key is equal")
     } else {
-      console.log(game[key], gameIn[key])
       game[key] = gameIn[key]
       console.log(`${key} updated`)
     }
