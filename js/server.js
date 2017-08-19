@@ -64,6 +64,7 @@ console.log("listening to 1988")
 
 //===========| Here Is State |===========
 
+const queue = []
 const games = [] 
 const cards = {
   "deck": engine().deck,
@@ -81,54 +82,64 @@ let composeGame = (ip, game, status) => {
 
   switch (status) {
     case "registering":
-      if (games[0]) {composeGame(ip, game, "ready")}
-      game.players[0].ip = ip
-      game.status = "queued"
-      games.push(game)
-      return games[0]
+      return registerPlayer()
     break
     case "queued":
-      return games[0]
+      return queue[0]
     break
-    case "ready":
-      dealGame()
-      games[0].players.email = game.players[0].email
-      games[0].status = "starting"
-      games[0].players.push(game.players[0])
-      return games[0]
+    case "full":
+      dealGame() //deal cards to start game
+      return prepGame()
     break
     case "setup":
-      game = heroize()
-      console.log(game)
-      game.trump = cards.trump
-      
-      game.refresh = "hero, villain, trump"
-      game.status = "playing"
-      return games[0]
-    break
     case "playing":
-      game = heroize()
-      return games[0]
+      return updateStatus()
     break
   }
 
-  //give proper cards to hero
-  function heroize() {
-    game = games[0]
-    if (game.players[0].ip === ip) {
-      console.log("here" + ip)
-      game.hero = cards.p1
-      game.villain = cards.p2.length
-    } else if (ip === game.players[1].ip) {
-      console.log("there" + ip)
-      game.hero = cards.p2
-      game.villain = cards.p1.length
+  function registerPlayer() {
+    //if smb in queue, game is full
+    if (queue[0]) {
+      return composeGame(ip, game, "full")
+    } else {
+      //if first player, add to queue
+      game.players.p1 = ip
+      game.status = "queued"
+      queue.push(game)
+      return game
     }
-    game.board = cards.board
-    games[0] = game
+  }
+  function prepGame() {
+    //take game from queue
+    game = queue[0]
+    //add another players
+    game.players.p2 = ip
+    //signal to client that game is ready to start
+    game.status = "starting"
+    //push into active games
+    games.push(game)
+    //clear the queue
+    queue.splice(0, 1)
+
     return game
   }
+  function updateStatus() {
+    game = games[0]
+    if (game.players.p1.ip === ip) {
+      updateCards("p1", "p2")
+    } else {
+      updateCards("p2", "p1")
+    }
+    let updateCards = (hero, villain) => {
+      game.hero = cards[hero]
+      game.villain = cards[villain].length
+    }
+    game.trump = cards.trump
+    game.board = cards.board
+    game.status = "playing"
 
+    return game
+  }
   function dealGame() {
     engine().deal("deck", "p1", 6)
     engine().deal("deck", "p2", 6)

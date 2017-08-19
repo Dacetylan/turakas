@@ -1,17 +1,17 @@
 const game = {
   status: "registering",
-  players: [],
+  players: {}
 }
 
 let login = function() {
   let email = document.getElementById("email").value
 
-  transmit(updateGame( { "players": [{email}] }))
+  transmit(updateGame())
   if (game.status === "registering") {poll()}
 }
 
 function updateGame(gameIn) {
-  if (gameIn === undefined) return
+  if (!gameIn) return game
 
   Object.keys(gameIn).forEach( (key) => {
     if (game[key] === gameIn[key]) {
@@ -23,9 +23,12 @@ function updateGame(gameIn) {
     }
   })
 
-  if (game.status === "starting") {window.location = "game.html"}
+  if (game.status === "starting") {
+    window.location = "game.html"
+    return
+  }
 
-  update("waiting", game.players.length)
+  update("waiting", game.status)
   update("info", JSON.stringify(game))
 
   return game
