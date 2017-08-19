@@ -16,7 +16,7 @@ function transmit(url) {
 let poll = () => {
   setInterval( () => {
       transmit(game)
-  }, 2000)
+  }, 5000)
 }
 poll()
 
@@ -31,6 +31,11 @@ function updateGame(gameIn) {
     }
   })
 
+  if (game.refresh) {
+    let args = game.refresh.split(", ")
+    refresh(args)
+  }
+
   if (game.status === "finished") {alert("Game over")}
 
   update("info", JSON.stringify(game))
@@ -44,22 +49,22 @@ function update(element, data) {
 
 
 
-function refresh(from, to) {
-  console.log(from, to);
-  args = [from, to]
+function refresh(args) {
+  console.log(args);
+  // args = [from, to]
   args.forEach(function(element) 
   {
     console.log(element)
     switch (element)
     {
-      case "p1":
-      draw(game.player.hand, "player")
+      case "hero":
+      draw(game.hero, "player")
       break
       case "board":
-      draw(board, "board")
+      draw(game.board, "board")
       break
       case "trump":
-      draw(trump, "trump")
+      draw(game.trump, "trump")
       break
     }
     console.log("did not find jackshit")

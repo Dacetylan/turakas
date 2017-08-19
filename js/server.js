@@ -64,7 +64,6 @@ console.log("listening to 1988")
 
 //===========| Here Is State |===========
 
-
 const games = [] 
 const cards = {
   "deck": engine().deck,
@@ -74,7 +73,6 @@ const cards = {
   "board": [],
   "muck": [],
 }
-
 
 // =======================================
 
@@ -100,36 +98,44 @@ let composeGame = (ip, game, status) => {
       return games[0]
     break
     case "setup":
-      game = games[0]
-      if (game.players[0].ip === ip) {
-        console.log("here" + ip)
-        game.hero = cards.p1
-        game.villain = cards.p2.length
-      } else if (ip === game.players[1].ip) {
-        console.log("there" + ip)
-        game.hero = cards.p2
-        game.villain = cards.p1.length
-      }
+      game = heroize()
       console.log(game)
       game.trump = cards.trump
-      game.board = cards.board
+      
       game.refresh = "hero, villain, trump"
       game.status = "playing"
-      games[0] = game
-      console.log("we have game or maybe we do"+game)
       return games[0]
     break
     case "playing":
+      game = heroize()
       return games[0]
     break
   }
+
+  //give proper cards to hero
+  function heroize() {
+    game = games[0]
+    if (game.players[0].ip === ip) {
+      console.log("here" + ip)
+      game.hero = cards.p1
+      game.villain = cards.p2.length
+    } else if (ip === game.players[1].ip) {
+      console.log("there" + ip)
+      game.hero = cards.p2
+      game.villain = cards.p1.length
+    }
+    game.board = cards.board
+    games[0] = game
+    return game
+  }
+
+  function dealGame() {
+    engine().deal("deck", "p1", 6)
+    engine().deal("deck", "p2", 6)
+    engine().deal("deck", "trump", 1)
+  }
 }
 
-function dealGame(ip, game) {
-  engine().deal("deck", "p1", 6)
-  engine().deal("deck", "p2", 6)
-  engine().deal("deck", "trump", 1)
-}
 
 function engine() {
 

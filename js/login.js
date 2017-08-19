@@ -45,15 +45,13 @@ function transmit(url) {
 let poll = () => {
   setInterval( () => {
       transmit(game)
-  }, 2000)
+  }, 5000)
 }
 
 //update some DOM element
 function update(element, data) {
   document.getElementById(element).innerHTML = data
 }
-
-
 
 //add listeners for buttons and such
 document.getElementById("login").onclick = login
