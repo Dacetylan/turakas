@@ -2,6 +2,12 @@ const http = require("http")
 const url = require("url")
 const fs = require("fs")
 
+// const options = {
+//   key: fs.readFileSync("key.pem"),
+//   cert: fs.readFileSync("cert.pem")
+// }
+const port = 2000
+
 http.createServer( (req, res) => {
   try {
     console.log("request made")
@@ -20,6 +26,8 @@ http.createServer( (req, res) => {
         if (path === "/")              return {address: "./index.html",
                                            answerType: "text"}
         if (path === "/index.html")    return {address: "./index.html",
+                                           answerType: "text"}
+        if (path === "/login.html")    return {address: "./login.html",
                                            answerType: "text"}
         if (path === "/game.html")     return {address: "./game.html",
                                            answerType: "text"}
@@ -80,8 +88,8 @@ http.createServer( (req, res) => {
     res.statusCode = 400
     return res.end(error.stack)
   }
-}).listen(1988)
-console.log("listening to 1988")
+}).listen(2000)
+console.log(`listening to ${port}`)
 
 //===========| Here Is State |===========
 
@@ -140,6 +148,7 @@ let composeGame = (ip, game, status) => {
       return game
     }
   }
+  // deals cards to players and a picks a trump
   function dealGame() {
     engine().deal("deck", "p1", 6)
     engine().deal("deck", "p2", 6)
@@ -148,7 +157,7 @@ let composeGame = (ip, game, status) => {
   function prepGame() {
     //take game from queue
     game = queue[0]
-    //add another players
+    //add another player
     game.players.p2 = ip
     //signal to client that game is ready to start
     game.status = "starting"
@@ -159,6 +168,12 @@ let composeGame = (ip, game, status) => {
 
     return game
   }
+
+
+  // updates the game state.
+  // + inject game object
+  // + return changed parts
+
   function updateStatus() {
     console.log("updating status")
     game = games[0]
@@ -191,7 +206,6 @@ let composeGame = (ip, game, status) => {
     }
     return game
   }
-
 }
 
 
@@ -266,7 +280,9 @@ function engine() {
           let attackerRank = attacker[0]
           let trumpSuit = referee.trumpSuit
 
-          if ((suit === attackerSuit && rank > attackerRank) || suit === trumpSuit && attackerSuit !== trumpSuit) {
+          if ((suit === attackerSuit && rank > attackerRank) 
+            || suit === trumpSuit && attackerSuit !== trumpSuit) {
+            
             console.log(`${from} kills attacker`)
             deal(from, to, nr, id)
             whoseMove()

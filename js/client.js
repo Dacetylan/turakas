@@ -39,12 +39,12 @@ function updateGame(gameIn) {
   }
   if (game.status === "finished") {alert("You Win the Game!")}
 
-  update("players", JSON.stringify(game.players))
   
   update("round", game.ref.round)
   update("whoseMove", game.ref.whoseMove)
   update("killer", game.ref.killer)
   update("villain", game.villain)
+  update("deck", game.deck)
 
   return game
 }
