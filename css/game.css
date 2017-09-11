@@ -1,0 +1,153 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+.game {
+  width: 29.7rem;
+}
+.info {
+  display: flex;
+  flex-flow: row wrap;
+}
+.stats {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-between;
+  width: 100%;
+  padding: .2rem;
+  background-color: lightgray;
+  color: brown;
+  font-weight: bold;
+  font-family: verdana;
+}
+.round, .moves, .killer {
+  text-align: right;
+}
+.info span {
+  font-weight: normal;
+}
+.showCards {
+  display: flex;
+  flex-flow: row;
+  justify-content: space-around;
+  width: 100%;
+  background-color: rgb(75, 100, 150);
+}
+.trumpDeck {
+  display: flex;
+  align-self: end;
+  margin: .5rem;
+}
+.deck {
+  margin-left: -3rem;
+  padding-top: 1.5rem !important;
+  background-color: brown;
+  color: yellow !important;
+  font-size: 4rem !important;
+  text-align: center;
+}
+
+.card, .villain {
+  height: 8rem;
+  width: 6rem;
+  padding: .5rem;
+  border-radius: 8px;
+  font-size: 2rem;
+  color: white;
+  box-shadow: 1px 1px 2px 1px rgba(100, 100, 100, 1);
+}
+.villain {
+  background-color: purple;
+  margin: 1rem .5rem;
+  height: 6rem;
+  width: 8rem;
+  padding: .5rem;
+  text-align: center;
+  font-size: 4rem;
+  color: yellow;
+}
+.board {
+  border: .5rem solid rgb(130, 130, 170);
+  display: flex;
+  flex-flow: row wrap;
+  height: 20rem;
+  width: 100%;
+  background-color: rgb(130, 130, 170);
+}
+.board .card {
+  margin: .5rem;
+}
+.board .card:nth-child(even) {
+  margin-left: -3.6rem;
+  margin-top: 1rem;
+  margin-right: 0;
+}
+.buttons {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  padding: 0 .5rem .5rem;
+  background-color: rgb(130, 130, 170);
+}
+.button {
+  padding: .8rem;
+  background-color: orange;
+  color: rgb(25, 25, 50);
+  font-family: verdana;
+  font-weight: bold;
+  border-radius: 5px;
+  user-select: none;
+  transition: all .1s ease-in-out
+}
+.button:hover {
+  cursor: pointer;
+  box-shadow: 0px 0px 4px 1px rgba(50, 55, 0, 1);
+}
+.player {
+  display: flex;
+  flex: row wrap;
+  justify-content: flex-start;
+  width: 100%;
+  padding: .5rem;
+  background-color: rgb(75, 100, 150);
+}
+.player .card {
+  margin-left: -1rem;
+  transition: all .1s ease-in-out;
+  cursor: pointer;
+}
+.player .card:hover {
+  box-shadow: 0px 0px 4px 2px rgba(255, 255, 0, 1);
+  display: inline-block;
+  transform: translate(0, -.5rem);
+}
+.player .card:first-child {
+  margin-left: 0;
+}
+.board, .player, .showCards {
+  user-select: none;
+}
+
+
+
+@media screen and (max-width: 450px) {
+	html {
+		font-size: 14px;
+	}
+}
+@media screen and (max-width: 400px) {
+	html {
+		font-size: 12px;
+	}
+}
+@media screen and (max-width: 350px) {
+	html {
+		font-size: 11px;
+	}
+}
+@media screen and (max-width: 300px) {
+	html {
+		font-size: 10px;
+	}
+}
