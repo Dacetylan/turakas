@@ -50,7 +50,7 @@ let poll = () => {
   }, 2000)
 }
 
-//update some DOM element
+//update a DOM element
 function update(element, data) {
   document.getElementById(element).innerHTML = data
 }
