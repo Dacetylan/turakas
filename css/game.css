@@ -98,7 +98,7 @@
   font-weight: bold;
   border-radius: 5px;
   user-select: none;
-  transition: all .1s ease-in-out
+  transition: all .1s ease-in-out;
 }
 .button:hover {
   cursor: pointer;

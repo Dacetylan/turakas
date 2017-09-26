@@ -45,11 +45,30 @@ http.createServer( (req, res) => {
       })
     }
     let handleGame = (game) => {
-      console.log("game status: " + game.status)
-      
-      handlePlayer(ip)
+      // console.log("game status: " + game.status)
+
+      // get the existing player or add one
+      let player = isConnected(ip) ? players[ip]
+                                   : addPlayer(ip)
+
+      let answer = () => {
+        switch ( player.status ) {
+
+          case "queued":
+          case "idle":
+
+            return player
+
+          case "playing":
+
+          return games[ (player.gameId) ]
+        }
+      }
+
       console.log( players )
       console.log( tryStarting() )
+      console.log( games )
+      console.log( queue )
       
 
 
@@ -319,8 +338,8 @@ function engine() {
 
 
 
-/* ===========================
-          Modularize
+/* ============================
+/          Modularize        //
 ===========================*/
 //
 //
@@ -334,63 +353,79 @@ const games = []                            //
 //--------------------------------------------
 
 
-//================ Constructors ==============//
-                                              //
-function Player(name) {                       //
-  let defaultName = "Player"                  //
-                                              //
-  this.name = name || defaultName             //
-  this.status = "new"                         //
-}                                             //
-                                              //
-function Cards(players) {                     //
-  let deck = engine().deck                    //
-                                              //
-  this.deck = deck                            //
-  this.trump = deck.splice(0, 1)              //
-  this.p1 = deck.splice(0, 6)                 //
-  this.p2 = deck.splice(0, 6)                 //
-  this.board = []                             //
-  this.muck = []                              //
-}                                             //
-                                              //
-function Referee(cards) {                     //
-                                              //
-  this.moves = 1                              //
-  this.killer = 2                             //
-  this.round = 1                              //
-  this.trumpSuit = cards.trump[0][1]          //
-}                                             //
-                                              //
-function Game(players) {                      //
+//================================= Constructors =============================//
+                                                                              //
+                                                                              //
+function Player(name) {
+  let defaultName = "Player"
+
+  this.name = name || defaultName
+  this.status = "new"
+}
+
+function Cards(players) {
+  let deck = engine().deck
+
+  this.deck = deck
+  this.trump = deck.splice(0, 1)
+  this.hands = players.reduce( 
+                         (hands, pl, ix) => {
+                            // create keys for all players {p1, p2, p3...}
+                            hands["p" + (ix + 1)] = deck.splice(0, 6)
+
+                            return hands
+                          }, {} )
+
+  this.board = []
+  this.muck = []
+}
+
+function Referee(cards) {
+
+  this.moves = 1
+  this.killer = 2
+  this.round = 1
+  this.trumpSuit = cards.trump[0][1]
+}
+
+function Game(players) {
   let cards = new Cards(players)
   let id = games.length
 
-  players.map( player => {
+  players.map( (player, ix) => {
                 player.gameId = id
+                player.playerId = (ix + 1)
                 player.status = "playing"
-            })                                //
-                                              //
-  this.id = id                                //
-  this.status = "playing"                     //
-  this.players = players                      //
-  this.cards = cards                          //
-  this.ref = new Referee(cards)               //
-}                                             //
-                                              //
-//--------------------------------------------//
+               })
+
+  this.id = id
+  this.status = "playing"
+  this.players = players
+  this.cards = cards
+  this.ref = new Referee(cards)
+}
+                                                                              //
+                                                                              //
+//----------------------------------------------------------------------------//
 
 
 
-//==================== Handlers ========================
+//==================== Handlers ====================//
+                                                    //
+                                                    //
 
+
+// add a player to the players object.
 function addPlayer(ip) {
-  
   let player = new Player()
+  // use ip to later match incoming request with player 
   players[ip] = player
 
   return player
 }
+// add the player object to the queue.
+// accessible only through reference. 
+// may need unique marker later
 
 function queuePlayer(player) {
   queue.push(player)
@@ -402,57 +437,82 @@ function queuePlayer(player) {
 function startGame(players) {
   return new Game(players)
 }
-                                                       
-                                                       
-//=================== Checks =======================
+                                                    //
+                                                    //
+//--------------------------------------------------//                                                       
 
-function isConnected(ip) {
-  return players.hasOwnProperty(ip)
-}
 
-function getPlayerStatus(ip) {
-  return players[ip].status
-}
 
-function canStartGame() {
-  return queue.length > 1
-}
+
+                                             
+//=================== Checks =======================//
+                                                    //
+function isConnected(ip) {                          //
+  return players.hasOwnProperty(ip)                 //
+}                                                   //
+                                                    //
+function getPlayerStatus(ip) {                      //
+  return players[ip].status                         //
+}                                                   //
+                                                    //
+function canStartGame() {                           //
+  return queue.length > 1                           //
+}                                                   //
+                                                    //
+//--------------------------------------------------//
  
-//============================== Data flow ============================
-
-
-//=========== Check player status ============
+//================================= Logic =============================//
+                                                                       //
+                                                                       //
+//=========== Check player status ============================//       //
+                                                              //       //
+                                                              //       //
 function handlePlayer(ip) {
 
   if ( isConnected(ip) ) {
     let player = players[ip]
 
     switch ( getPlayerStatus(ip) ) {
+
       case "queued":
-        return `${player.name} is waiting for game`
-      case "playing":
-        console.log(player.gameId)
-        return games[ (player.gameId) ]
       case "idle":
-        return `${ player.name } is just chillin'`
+
+        return player
+
+      case "playing":
+
+        return games[ (player.gameId) ]
     }
 
   } else {
+
     let player = addPlayer(ip)
     queuePlayer( player )
+
     return player
   }
-}
-//=============== When enough players, start a game ============
-function tryStarting() {
-  if ( canStartGame() ) {
-    let game = startGame( queue.splice(0, 2) )
-    
-    games.push( game )
+}                                                             
+                                                              //       //
+                                                              //       //
+//------------------------------------------------------------//       //
+                                                                       //
+//=============== When enough players, start a game ==========//       //
+function tryStarting() {                                      //       //
+  if ( canStartGame() ) {                                     //       //
+    let game = startGame( queue.splice(0, 2) )                //       //
+                                                              //       //
+    games.push( game )                                        //       //
+                                                              //       //
+    return game                                               //       //
+  } else {                                                    //       //
+    return "Too few players"                                  //       //
+  }                                                           //       //
+}                                                             //       //
+                                                              //       //
+//------------------------------------------------------------//       //
+                                                                       //
+//---------------------------------------------------------------------//
 
-    return game      
-  } else {
-    return "Too few players"
-  }
-}
-  
+
+
+
