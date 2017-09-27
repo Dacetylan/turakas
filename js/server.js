@@ -9,12 +9,14 @@ http.createServer( (req, res) => {
     console.log("request made")
     let ip = req.connection.remoteAddress
 
-    let send = (data, type) => {
+
+
+    function send(data, type) {
       // console.log("sending: " + data)
       res.writeHead(200, {"Content-Type": type})
       res.end(data)
     }
-    let transmitFile = (path) => {
+    function transmitFile(path) {
       console.log("transmitting file")
       let chooseFile = () => {
         if (path === "/favicon.ico")   return {address: "./img/favicon.ico",
@@ -44,52 +46,22 @@ http.createServer( (req, res) => {
         send(rawFile, chooseFile().answerType)  
       })
     }
-    let handleGame = (gameIn) => {
-      console.log("game status: " + gameIn.name)
+    function handleGame(client) {
+      console.log(client)
 
-      /*
-      Check if player is connected or create a new instance
-      */
-      let player = ( () => 
-        isConnected(ip) ? players[ip]
-                        : queuePlayer( addPlayer(ip, gameIn.players[0].name) )
-        )()
-      //---------------------------------------------------
+      if (client.command) { execute(client.command) }
 
-
-      /*
-      For playing user execute commands that they might have
-      */
-      if ( player.status === "playing" ) {
-
-        if ( gameIn.command ) {
-          executeCmd(gameIn.command)
-        }
-
-      } else {
-        tryStarting() 
-      }
-
-      //----------------------------------------------------
-
-
-      /*
-      Compose an answer to specific player, giving them info
-        on need-to-know basis
-      */
-      let composeAnswer = (player) => new Answer( player )
-      
-      //----------------------------------------------------
-      console.log(`Manamanah: ${player}`)
-      console.log( composeAnswer(player) )
-
-      return JSON.stringify(composeAnswer(player))
+      return users[ip] ? users[ip]
+                       : tryStarting( queueUser( addUser( ip, client)))
     }
     (function route() {
           let parsedUrl = url.parse(req.url, true)
 
           if (parsedUrl.search) {
-            send(handleGame(JSON.parse(parsedUrl.query.game)), "json")
+            send(JSON.stringify(
+              handleGame(
+                JSON.parse(
+                  parsedUrl.query.game))), "json")
           } else {
             console.log("routing to file transfer")
             transmitFile(parsedUrl.path)
@@ -102,10 +74,7 @@ http.createServer( (req, res) => {
 }).listen(2000)
 console.log(`listening to ${port}`)
 
-
-
-// =======================================
-
+//--------------------------------------------------------------------//
 
 function engine() {
 
@@ -251,50 +220,26 @@ function engine() {
   }
 }
 
-
-
-/* ============================
-/          Modularize        //
-===========================*/
-//
-//
-//
 //================== State ===================
                                             //
-const players = {}                          //
+const users = {}                            //
 const queue = []                            //
 const games = []                            //
                                             //
 //--------------------------------------------
 
-
 //================================= Constructors =============================//
                                                                               //
                                                                               //
-function Player(name) {
-  let defaultName = "Player"
-
-  this.name = name || defaultName
-  this.status = "new"
-}
-
 function Cards(players) {
   let deck = engine().deck
 
   this.deck = deck
   this.trump = deck.splice(0, 1)
-  this.hands = players.reduce( 
-                 (hands, pl, ix) => {
-
-                    // create keys for all players {p1, p2, p3...}
-                    hands["p" + (ix + 1)] = deck.splice(0, 6)
-
-                    return hands
-                  }, {} )
+  this.hands = players.map( player => deck.splice(0, 6) )
   this.board = []
   this.muck = []
 }
-
 function Referee(cards) {
 
   this.moves = 1
@@ -302,24 +247,22 @@ function Referee(cards) {
   this.round = 1
   this.trumpSuit = cards.trump[0][1]
 }
-
 function Game(players) {
   let cards = new Cards(players)
   let id = games.length
 
   players.map( (player, ix) => {
                 player.gameId = id
-                player.playerId = (ix + 1)
+                player.id = (ix)
                 player.status = "playing"
-               })
+               }
+          )
 
   this.id = id
-  this.status = "playing"
-  this.players = players
+  this.status = "active"
   this.cards = cards
   this.ref = new Referee(cards)
 }
-
 function Answer(player) {
   console.log(`answering`)
   console.log(player)
@@ -351,90 +294,47 @@ function Answer(player) {
                                                                               //
 //----------------------------------------------------------------------------//
 
+function addUser(ip, user) {
+  users[ip] = user
 
-
-//==================== Handlers ====================//
-                                                    //
-                                                    //
-
-
-// add a player to the players object.
-function addPlayer(ip, name) {
-  let player = new Player(name)
-  // use ip to later match requests with player 
-  players[ip] = player
-
-  return player
+  return users[ip]
 }
-// add the player object to the queue.
-// accessible only through reference. 
-// may need unique marker later
+function queueUser(user) {
+  queue.push( user )
+  user.status = "queued"
 
-function queuePlayer(player) {
-  queue.push(player)
-  player.status = "queued"
-
-  return player
+  return user
 }
+function tryStarting(user) {
 
-function startGame(players) {
-  return new Game(players)
-}
-                                                    //
-                                                    //
-//--------------------------------------------------//                                                       
-
-
-
-
-                                             
-//=================== Checks =======================//
-                                                    //
-function isConnected(ip) {
-  return players.hasOwnProperty(ip)                 //
-}                                                   //
-                                                    //
-function getPlayerStatus(ip) {                      //
-  return players[ip].status                         //
-}                                                   //
-                                                    //
-function canStartGame() {                           //
-  return queue.length > 1                           //
-}                                                   //
-                                                    //
-//--------------------------------------------------//
- 
-//================================= Logic =============================//
-                                                                       //
-                                                                       //
-//=========== Check player status ============================//       //
-                                                              //       //
-                                                              //       //                                                         
-                                                              //       //
-                                                              //       //
-//------------------------------------------------------------//       //
-
-                                                                       //
-//=============== When enough players, start a game ==========//       //
-
-
-function tryStarting() {
-
-  if ( canStartGame() ) {
-    let game = startGame( queue.splice(0, 2) )
-
-    games.push( game )
-
-    return game
-  } else {
-    return "Too few players"
+  if (queue.length > 1) {
+    let players = queue.splice(0, 2)
+    games.push( new Game( players ))
+    players.map( player => 
+                 player.game = needToKnow( games[player.gameId], player.id))
   }
-}                                                             //       //
-                                                              //       //
-//------------------------------------------------------------//       //
-                                                                       //
-//---------------------------------------------------------------------//
-
+  
+  return user
+}
+function needToKnow(game, playerId) {
+  let deck = game.cards.deck
+  let hands = game.cards.hands.map( (hand, ix) => 
+                                           ix === playerId ? hand
+                                                           : hand.length )
+  console.log("hands: ")
+  console.log(hands)
+  return {
+    id: game.id,
+    status: game.status,
+    cards: {
+            deck: deck.length,
+            trump: game.cards.trump,
+            board: game.cards.board,
+            hands: hands 
+           },
+    ref: game.ref
+  }
+}
 
 
 

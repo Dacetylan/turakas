@@ -1,7 +1,6 @@
 //======== The Game ========//
-
-const game = {
-  players: []
+const user = {
+  status: "new"
 }
                            //
 //-------------------------//
@@ -13,14 +12,13 @@ const game = {
                                                        //
 function transmit(url) {
   console.log(url)
-
   url = "?game=" + JSON.stringify(url)
 
   let request = new XMLHttpRequest()
 
       request.open("GET", url, true);
       request.onload = function() {
-
+        update("info", request.responseText)
         modifyGame(JSON.parse(request.responseText))
       }
   request.send()
@@ -36,7 +34,7 @@ function transmit(url) {
                                                        //
             function poll( time = 2000 ) {
               setInterval( () => {
-                  transmit(game)
+                  transmit(user)
               }, time)
             }
                                                        //
@@ -53,15 +51,10 @@ function transmit(url) {
   start polling the server                  
   we only use this once, so no worries about seperation 
 */
-
 let login = function() {
   let name = document.getElementById("name").value
-
-  game.players = [ {name} ]
-
-  if (!game.status) {
-    poll()
-  }
+  user.name = name
+  poll()
 
   //disable the button and display that we are waiting
   this.setAttribute("disabled", "true")
@@ -76,9 +69,7 @@ let login = function() {
                                                           //
                                                           //
 function modifyGame(gameIn) {
-  Object.keys(gameIn).map( key => {
-    game[key] = gameIn[key]
-  })
+  game = gameIn
 }
 
 
