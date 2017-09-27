@@ -44,44 +44,55 @@ http.createServer( (req, res) => {
         send(rawFile, chooseFile().answerType)  
       })
     }
-    let handleGame = (game) => {
-      // console.log("game status: " + game.status)
+    let handleGame = (gameIn) => {
+      console.log("game status: " + gameIn.name)
 
-      // get the existing player or add one
-      let player = isConnected(ip) ? players[ip]
-                                   : addPlayer(ip)
+      /*
+      Check if player is connected or create a new instance
+      */
+      let player = ( () => 
+        isConnected(ip) ? players[ip]
+                        : queuePlayer( addPlayer(ip, gameIn.players[0].name) )
+        )()
+      //---------------------------------------------------
 
-      let answer = () => {
-        switch ( player.status ) {
 
-          case "queued":
-          case "idle":
+      /*
+      For playing user execute commands that they might have
+      */
+      if ( player.status === "playing" ) {
 
-            return player
-
-          case "playing":
-
-          return games[ (player.gameId) ]
+        if ( gameIn.command ) {
+          executeCmd(gameIn.command)
         }
+
+      } else {
+        tryStarting() 
       }
 
-      console.log( players )
-      console.log( tryStarting() )
-      console.log( games )
-      console.log( queue )
+      //----------------------------------------------------
+
+
+      /*
+      Compose an answer to specific player, giving them info
+        on need-to-know basis
+      */
+      let composeAnswer = (player) => new Answer( player )
       
+      //----------------------------------------------------
+      console.log(`Manamanah: ${player}`)
+      console.log( composeAnswer(player) )
 
-
-      //return JSON.stringify(composeGame(ip, game, game.status))
+      return JSON.stringify(composeAnswer(player))
     }
     (function route() {
-          let command = url.parse(req.url, true)
+          let parsedUrl = url.parse(req.url, true)
 
-          if (command.search) {
-            send(handleGame(JSON.parse(command.query.game)), "json")
+          if (parsedUrl.search) {
+            send(handleGame(JSON.parse(parsedUrl.query.game)), "json")
           } else {
             console.log("routing to file transfer")
-            transmitFile(command.path)
+            transmitFile(parsedUrl.path)
           }
     })(req)
   } catch (error) {
@@ -94,102 +105,6 @@ console.log(`listening to ${port}`)
 
 
 // =======================================
-
-let composeGame = (ip, game, status) => {
-  console.log("composing game")
-
-  switch (status) {
-    case "registering":
-      return registerPlayer()
-    break
-    case "queued":
-      if (games.length > 0) return games[0]
-                       else return queue[0]
-    break
-    case "full":
-      dealGame() //deal cards to start game
-      referee.trumpSuit = cards.trump[0][1]
-      return prepGame()
-    break
-    case "playing":
-      return updateStatus()
-    break
-  }
-
-  function registerPlayer() {
-    //if smb in queue, game is full
-    // console.log("registering player")
-    if (queue[0]) {
-      // console.log("game full")
-      return composeGame(ip, game, "full")
-      } else {
-      // console.log("game queued")
-      //if first player, add to queue
-      game.players.p1 = ip
-      game.status = "queued"
-      queue.push(game)
-      return game
-    }
-  }
-  // deals cards to players and a picks a trump
-  function dealGame() {
-    engine().deal("deck", "p1", 6)
-    engine().deal("deck", "p2", 6)
-    engine().deal("deck", "trump", 1)
-  }
-  function prepGame() {
-    //take game from queue
-    game = queue[0]
-    //add another player
-    game.players.p2 = ip
-    //signal to client that game is ready to start
-    game.status = "starting"
-    //push into active games
-    games.push(game)
-    //clear the queue
-    queue.splice(0, 1)
-
-    return game
-  }
-
-
-  // updates the game state.
-  // + inject game object
-  // + return changed parts
-
-  function updateStatus() {
-    console.log("updating status")
-    game = games[0]
-    // console.log(game.players.p1 === ip)
-    if (game.players.p1 === ip) {
-      // console.log("p1" + ip)
-      updateCards("p1", "p2")
-    } else {
-      // console.log("p2" + ip)
-      updateCards("p2", "p1")
-    }
-    function updateCards(hero, villain) {
-      // console.log(`${hero}, ${villain}`)
-      game.playerId = hero
-      game.hero = cards[hero]
-      game.villain = cards[villain].length
-    }
-    game.trump = cards.trump
-    game.board = cards.board
-    game.deck = cards.deck.length
-    game.muck = cards.muck.length
-    game.ref = referee
-    game.status = "playing"
-    game.refresh = "hero, board, trump"
-    //victory condition
-    if (cards.deck.length === 0
-        && cards.trump.length === 0
-        && game.hero.length === 0) {
-      game.status = "finished"
-    }
-    return game
-  }
-}
 
 
 function engine() {
@@ -369,13 +284,13 @@ function Cards(players) {
   this.deck = deck
   this.trump = deck.splice(0, 1)
   this.hands = players.reduce( 
-                         (hands, pl, ix) => {
-                            // create keys for all players {p1, p2, p3...}
-                            hands["p" + (ix + 1)] = deck.splice(0, 6)
+                 (hands, pl, ix) => {
 
-                            return hands
-                          }, {} )
+                    // create keys for all players {p1, p2, p3...}
+                    hands["p" + (ix + 1)] = deck.splice(0, 6)
 
+                    return hands
+                  }, {} )
   this.board = []
   this.muck = []
 }
@@ -404,6 +319,34 @@ function Game(players) {
   this.cards = cards
   this.ref = new Referee(cards)
 }
+
+function Answer(player) {
+  console.log(`answering`)
+  console.log(player)
+  if (player.gameId) {
+    let game = games[gameId]
+    let gameHands = game.cards.hands
+    let id = player.playerId
+
+    this.id = game.id
+    this.status = game.status
+    this.players = game.players
+    this.cards = {
+        trump: game.cards.trump,
+        board: game.cards.board,
+        hands: Object.keys(gameHands)
+                     .reduce((hands, player) => {
+                        hands[player] = gameHands[player].length
+
+                        return hands
+                      }, {}),
+    }
+    this.cards.hands["p" + id] = gameHands["p" + id]
+    this.ref = game.ref
+  } else {
+    this.players = player
+  }
+}
                                                                               //
                                                                               //
 //----------------------------------------------------------------------------//
@@ -416,9 +359,9 @@ function Game(players) {
 
 
 // add a player to the players object.
-function addPlayer(ip) {
-  let player = new Player()
-  // use ip to later match incoming request with player 
+function addPlayer(ip, name) {
+  let player = new Player(name)
+  // use ip to later match requests with player 
   players[ip] = player
 
   return player
@@ -431,7 +374,7 @@ function queuePlayer(player) {
   queue.push(player)
   player.status = "queued"
 
-  return queue
+  return player
 }
 
 function startGame(players) {
@@ -447,7 +390,7 @@ function startGame(players) {
                                              
 //=================== Checks =======================//
                                                     //
-function isConnected(ip) {                          //
+function isConnected(ip) {
   return players.hasOwnProperty(ip)                 //
 }                                                   //
                                                     //
@@ -466,47 +409,26 @@ function canStartGame() {                           //
                                                                        //
 //=========== Check player status ============================//       //
                                                               //       //
-                                                              //       //
-function handlePlayer(ip) {
-
-  if ( isConnected(ip) ) {
-    let player = players[ip]
-
-    switch ( getPlayerStatus(ip) ) {
-
-      case "queued":
-      case "idle":
-
-        return player
-
-      case "playing":
-
-        return games[ (player.gameId) ]
-    }
-
-  } else {
-
-    let player = addPlayer(ip)
-    queuePlayer( player )
-
-    return player
-  }
-}                                                             
+                                                              //       //                                                         
                                                               //       //
                                                               //       //
 //------------------------------------------------------------//       //
+
                                                                        //
 //=============== When enough players, start a game ==========//       //
-function tryStarting() {                                      //       //
-  if ( canStartGame() ) {                                     //       //
-    let game = startGame( queue.splice(0, 2) )                //       //
-                                                              //       //
-    games.push( game )                                        //       //
-                                                              //       //
-    return game                                               //       //
-  } else {                                                    //       //
-    return "Too few players"                                  //       //
-  }                                                           //       //
+
+
+function tryStarting() {
+
+  if ( canStartGame() ) {
+    let game = startGame( queue.splice(0, 2) )
+
+    games.push( game )
+
+    return game
+  } else {
+    return "Too few players"
+  }
 }                                                             //       //
                                                               //       //
 //------------------------------------------------------------//       //

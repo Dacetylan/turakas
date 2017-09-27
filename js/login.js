@@ -1,54 +1,91 @@
+//======== The Game ========//
+
 const game = {
-  status: "registering",
-  players: {}
+  players: []
 }
+                           //
+//-------------------------//
 
-let login = function() {
-  let email = document.getElementById("email").value
 
-  transmit(updateGame())
-  if (game.status === "registering") {poll()}
-}
 
-function updateGame(gameIn) {
-  if (!gameIn) return game
-
-  Object.keys(gameIn).forEach( (key) => {
-    if (game[key] === gameIn[key]) {
-      console.log("Key is equal")
-    } else {
-      game[key] = gameIn[key]
-      console.log(`${key} updated`)
-    }
-  })
-
-  if (game.status === "starting") {
-    window.location = "game.html"
-    return
-  }
-
-  update("waiting", game.status)
-  update("info", JSON.stringify(game))
-
-  return game
-}
-
+//==================== Transmitter ====================//
+                                                       //
+                                                       //
 function transmit(url) {
   console.log(url)
 
   url = "?game=" + JSON.stringify(url)
+
   let request = new XMLHttpRequest()
-  request.open("GET", url, true);
-  request.onload = function() {
-    updateGame(JSON.parse(request.responseText))
-  }
+
+      request.open("GET", url, true);
+      request.onload = function() {
+
+        modifyGame(JSON.parse(request.responseText))
+      }
   request.send()
 }
-let poll = () => {
-  setInterval( () => {
-      transmit(game)
-  }, 2000)
+                                                       //
+                                                       //
+//-----------------------------------------------------//
+
+
+
+//================= Poll the server ===================//
+                                                       //
+                                                       //
+            function poll( time = 2000 ) {
+              setInterval( () => {
+                  transmit(game)
+              }, time)
+            }
+                                                       //
+                                                       //
+//-----------------------------------------------------//
+
+
+
+//==================== Login the player ==================//
+                                                          //
+                                                          //
+/* 
+  add new player to client side game object
+  start polling the server                  
+  we only use this once, so no worries about seperation 
+*/
+
+let login = function() {
+  let name = document.getElementById("name").value
+
+  game.players = [ {name} ]
+
+  if (!game.status) {
+    poll()
+  }
+
+  //disable the button and display that we are waiting
+  this.setAttribute("disabled", "true")
+  update("info", "You are registered")
 }
+                                                          //
+                                                          //
+//--------------------------------------------------------//
+
+
+//=================== Modify the game ====================//
+                                                          //
+                                                          //
+function modifyGame(gameIn) {
+  Object.keys(gameIn).map( key => {
+    game[key] = gameIn[key]
+  })
+}
+
+
+                                                          //
+                                                          //
+//--------------------------------------------------------//
+
 
 //update a DOM element
 function update(element, data) {
