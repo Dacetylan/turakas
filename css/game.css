@@ -41,7 +41,8 @@
 }
 .deck {
   margin-left: -3rem;
-  padding-top: 1.5rem !important;
+  height: 6rem !important;
+  width: 4.5rem !important; 
   background-color: brown;
   color: yellow !important;
   font-size: 4rem !important;
@@ -60,26 +61,30 @@
 .villain {
   background-color: purple;
   margin: 1rem .5rem;
-  height: 6rem;
-  width: 8rem;
-  padding: .5rem;
+  height: 4.5rem;
+  width: 6rem;
+  padding: 0rem;
   text-align: center;
   font-size: 4rem;
   color: yellow;
 }
 .board {
-  border: .5rem solid rgb(130, 130, 170);
+/*   border: .5rem solid rgb(130, 130, 170); */
   display: flex;
   flex-flow: row wrap;
+  justify-content: flex-start;
   height: 20rem;
   width: 100%;
+  padding: .5rem 1rem .5rem .5rem;
   background-color: rgb(130, 130, 170);
 }
 .board .card {
   margin: .5rem;
+  height: 6rem;
+  width: 4.5rem;
 }
 .board .card:nth-child(even) {
-  margin-left: -3.6rem;
+  margin-left: -2.4rem;
   margin-top: 1rem;
   margin-right: 0;
 }
@@ -98,7 +103,7 @@
   font-weight: bold;
   border-radius: 5px;
   user-select: none;
-  transition: all .1s ease-in-out;
+  transition: all .1s ease-in-out
 }
 .button:hover {
   cursor: pointer;
@@ -132,22 +137,22 @@
 
 
 @media screen and (max-width: 450px) {
-	html {
-		font-size: 14px;
-	}
+  html {
+    font-size: 14px;
+  }
 }
 @media screen and (max-width: 400px) {
-	html {
-		font-size: 12px;
-	}
+  html {
+    font-size: 12px;
+  }
 }
 @media screen and (max-width: 350px) {
-	html {
-		font-size: 11px;
-	}
+  html {
+    font-size: 11px;
+  }
 }
 @media screen and (max-width: 300px) {
-	html {
-		font-size: 10px;
-	}
+  html {
+    font-size: 10px;
+  }
 }

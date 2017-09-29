@@ -7,9 +7,15 @@ const port = 2000
 http.createServer( (req, res) => {
   try {
     console.log("request made")
+
     let ip = req.connection.remoteAddress
+    let parsedUrl = url.parse(req.url, true)
 
+    if (parsedUrl.search) {
+      let clientObj = JSON.parse(parsedUrl.query.client)
+      send( JSON.stringify( getAnswer( clientObj )), "json" )
 
+    } else { transmitFile(parsedUrl.path) }
 
     function send(data, type) {
       // console.log("sending: " + data)
@@ -46,27 +52,16 @@ http.createServer( (req, res) => {
         send(rawFile, chooseFile().answerType)  
       })
     }
-    function handleGame(client) {
+    function getAnswer(client) {
       console.log(client)
+      console.log(games)
+      console.log(users)
 
       if (client.command) { execute(client.command) }
 
       return users[ip] ? users[ip]
                        : tryStarting( queueUser( addUser( ip, client)))
     }
-    (function route() {
-          let parsedUrl = url.parse(req.url, true)
-
-          if (parsedUrl.search) {
-            send(JSON.stringify(
-              handleGame(
-                JSON.parse(
-                  parsedUrl.query.game))), "json")
-          } else {
-            console.log("routing to file transfer")
-            transmitFile(parsedUrl.path)
-          }
-    })(req)
   } catch (error) {
     res.statusCode = 400
     return res.end(error.stack)
