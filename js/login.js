@@ -28,7 +28,6 @@ const client = {}
 //   }
 // }
 
-
                            //
 //-------------------------//
 
@@ -45,8 +44,8 @@ function transmit(url) {
 
       request.open("GET", url, true);
       request.onload = function() {
-        render("info", request.responseText)
-        modifyGame(JSON.parse(request.responseText))
+        console.log(request.responseText)
+        updateGame(JSON.parse(request.responseText))
       }
   request.send()
 }
@@ -58,9 +57,9 @@ function transmit(url) {
 //================= Poll the server ===================//
                                                        //
                                                        //
-            function poll( time = 2000 ) {
+            function poll( time = 1000 ) {
               setInterval( () => {
-                  transmit(client)
+                  transmit({name: client.name})
               }, time)
             }
                                                        //
@@ -75,7 +74,7 @@ function transmit(url) {
 /* 
   add new player to client side game object
   start polling the server                  
-  we only use this once, so no worries about seperation 
+  we only use this once
 */
 let login = function() {
   let name = document.getElementById("name").value
@@ -86,107 +85,113 @@ let login = function() {
   this.setAttribute("disabled", "true")
   render("info", "You are registered")
 }
+document.getElementById("login").onclick = login
                                                           //
                                                           //
 //--------------------------------------------------------//
-
+function render(element, data) {
+  document.getElementById(element).innerHTML = data
+}
 
 //=================== Modify the game ====================//
                                                           //
                                                           //
-function modifyGame(newClient) {
+function updateGame(newClient) {
 
-  updateClient(newClient)
+  client.name = newClient.name
 
-  if (client.status === "playing") {
-    render("container", gameMarkup)
-    render("round", client.game.ref.round)
-    render("whoseMove", client.game.ref.moves)
-    render("killer", client.game.ref.killer)
-    render("trump", client.game.cards.trump[0])
-    render("deck", client.game.cards.deck)
-    render("villain", 6)
+  if (newClient.game) {
+    if (!client.game) {
+      render("container", gameMarkup)
+
+      client.cards = {
+        board: [],
+        hand: [],
+        trump: {}
+      }
+    }
+
+    client.id   = newClient.id
+    client.game = newClient.game
+
+    updateCards( client.cards, newClient.cards )
+
+    render("playerId",  client.id + 1)
+    render("round",     client.game.round)
+    render("whoseMove", client.game.moves + 1)
+    render("killer",    client.game.killer + 1)
+    render("deck",      client.game.deck)
+    render("villain",   client.game.villain)
+
+  } else {
+
+    delete client.id
+    delete client.game
+    delete client.cards
   }
-  
-  if (client.game) {
-    refresh(["hero", "board", "trump"])
-  }
-
 }
+
                                                           //
                                                           //
 //--------------------------------------------------------//
 
 function isEqual(one, two) {
+
   return ( Array.isArray(one)   && 
-           Array.isArray(two) ) ? 
-     JSON.stringify(one.sort()) === JSON.stringify(two.sort()) 
-                                :
-                            one === two
+           Array.isArray(two) ) ?
+            JSON.stringify(one) === 
+            JSON.stringify(two) :
+                            one === 
+                            two
 }
+function updateCards(cards, newCards) {
+  Object.keys(newCards).map( key => {
 
-function updateClient(newClient) {
-  Object.keys(newClient).map( key => {
-    if (typeof client[key] !== "object") {
-      
-      if ( isEqual( client[key], newClient[key] )) {
-        return
-      } else {
-        client[key] = newClient[key]
-      }
+    if (isEqual( cards[key], newCards[key] )) {
+      console.log(`${key} is the same`)
+      return
+
+    } else {
+      cards[key] = newCards[key]
+      refresh(key)
     }
   })
-
-  console.log(client)
-  
 }
 
+function refresh(element) {
+    console.log(element)
 
+  switch (element) {
+  case "hand":
+    console.log(client.hand)
+    console.log(client.id)
 
-//render a DOM element
-function render(element, data) {
-  document.getElementById(element).innerHTML = data
-}
+    draw(client.cards.hand, "player")
+    break
+  case "board":
+    draw(client.cards.board, "board")
+    break
+  case "trump":
+  //trump we send into draw() as an array, so it would have length
+    draw([client.cards.trump], "trump")
+    break
+  }
 
-//add listeners for buttons and such
-document.getElementById("login").onclick = login
-
-
-
-function refresh(args) {
-  // console.log(args);
-  // args = [from, to]
-
-  args.forEach(function(element) 
-  {
-    // console.log(element)
-    switch (element)
-    {
-      case "hero":
-      draw(client.game.cards.hands[client.id], "player")
-      break
-      case "board":
-      draw(client.game.cards.board, "board")
-      break
-      case "trump":
-      draw(client.game.cards.trump, "trump")
-      break
-    }
-  })
   addListeners()
 }
 
 function draw (arr, str) {
-  // console.log(arr, str);
+  console.log(arr, str);
   document.getElementById(str).innerHTML = "";
   for (var i = 0; i < arr.length; i++) {
     var div = document.createElement("div");
-
-    div.innerHTML = arr[i];
+    let id = arr[i].rank + arr[i].suit
+    div.innerHTML = id;
     div.setAttribute('class', 'card');
-    div.setAttribute('id', arr[i]);
+    div.setAttribute('id', id);
+    console.log(arr[i].suit)
 
-    switch (arr[i][1]) {
+    switch (arr[i].suit) {
       case "h":
       div.style.background = "red";
 
@@ -204,48 +209,96 @@ function draw (arr, str) {
 
       break;
     }
-
+    console.log(div)
+    console.log(str)
+    console.log(document.getElementById(str))
     document.getElementById(str).appendChild(div);
   }
 }
 
-function getId() {
-   console.log(this.id)
-   let id = this.id
-
-   cardSelector(id)
-}
 //Lets make the game playable. Next is how to select the card with a mouse
-function addListeners () {  
-   //this var has an array of all the clickable cards
-   var selectedCard = document.getElementsByClassName("card");
-   // we loop through the cards and add eventlisteners
-   for (var i = 0; i < selectedCard.length; i++) {
-      selectedCard[i].addEventListener("click", getId, false);
-   }
-}  
-addListeners()
+function addListeners() {
+  //this var has an array of all the clickable cards
+  var selectedCard = Array.from(document.getElementsByClassName("card"))
+  selectedCard.map( card => card.addEventListener("click", moveCard, false) )
+  // we loop through the cards and add eventlisteners
+  // for (var i = 0; i < selectedCard.length; i++) {
+  //   selectedCard[i].addEventListener("click", moveCard, false);
+  // }
 
-function cardSelector (id) {
-  console.log('cardSelector ' + id)
-   //checks if given ID exists in the player arrays
-  let playerHand = client.game.cards.hands[client.id]
-
-  if (playerHand.indexOf(id) !== -1) {
-    let board = client.game.cards.board
-      board.push( playerHand.splice( playerHand.indexOf(id), 1 )[0] )
-      console.log(board)
-      refresh(["hero", "board"])
-  } else {
-    console.log("Not your card")
+  document.getElementById("pickUp").onclick = endRound
+  document.getElementById("muck").onclick = endRound
+}
+function endRound() {
+  if (client.game.moves === client.id) {
+    let action = this.id
+    transmit({ action })
   }
 }
 
+function moveCard() {
+  console.log(this.id)
+  const idToObj = id => ({ rank: id[0], suit: id[1] })
+  let id = idToObj(this.id)
 
-let gameMarkup = String(
+  if ( isValid(id) ) {
+    transmit({ move: id })
+  } 
+}
+function isValid(card) {
+
+  let ix = client.cards.hand.findIndex( el => 
+                                        el.rank === card.rank && 
+                                        el.suit === card.suit )
+  card = client.cards.hand[ix]
+
+  if ( client.game.moves === client.id
+       && ix > -1
+       && canMoveCard(card) ) {
+
+    return true
+  } else return false
+
+  function canMoveCard(card) {
+    let hand = client.cards.hand
+    let attacker = client.game.attacker
+    let board = client.cards.board
+    let trump = client.cards.trump
+
+    console.log(ix)
+    if (attacker) {
+      // when there is an attacker check if our card is:
+      // -- same suit or trump
+      // -- has higher value
+
+      console.log(card)
+      console.log(attacker)
+      console.log(trump.suit)
+      if (card.value > attacker.value && 
+          card.suit === attacker.suit || card.suit === trump.suit) {
+        console.log("this is true")
+        return true
+      } else {
+        console.log("something aint right")
+        return false
+      }
+      // if there is no attacker, card (new attacker) can go on the board
+    } else if (board.length) {
+      if (board.some( el => el.rank === card.rank)) {
+        return true
+      } else return false
+    } else {
+      console.log("here i stand")
+      return true
+    }
+  }
+}
+
+const gameMarkup = String(
   `<div class="game">
       <div id="info" class="info">
         <div class="stats">
+          <div class="round">You are: p<span id="playerId">1</span></div>
           <div class="round">Round: <span id="round">3</span></div>
           <div class="whoseMove">Moves: p<span id="whoseMove"></span></div>
           <div class="killer">Killer: p<span id="killer"></span></div>
@@ -267,5 +320,11 @@ let gameMarkup = String(
       </div>
       <div id="player" class="player">
       </div>
-    </div>`
+    </div>
+
+    <script>
+
+    </script>
+
+    `
 )

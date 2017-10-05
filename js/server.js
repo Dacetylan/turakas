@@ -6,7 +6,7 @@ const port = 2000
 
 http.createServer( (req, res) => {
   try {
-    console.log("request made")
+    // console.log("request made")
 
     let ip = req.connection.remoteAddress
     let parsedUrl = url.parse(req.url, true)
@@ -54,13 +54,45 @@ http.createServer( (req, res) => {
     }
     function getAnswer(client) {
       console.log(client)
-      console.log(games)
-      console.log(users)
 
-      if (client.command) { execute(client.command) }
+      let user = users[ip] || queueUser(addUser(ip, client))
 
-      return users[ip] ? users[ip]
-                       : tryStarting( queueUser( addUser( ip, client)))
+      if (client.move) {
+        let card = client.move
+        if (user.game.isValid(user.hand, card)) {
+          user.move(user.hand, card).nextMoves()
+        }  
+      } else if (client.action) {
+        if (client.action === "pickUp") {
+          user[client.action](user).replenish().nextMoves()
+        } else if (client.action === "muck")
+          user[client.action](user).replenish().nextKiller()
+      }
+
+
+      console.log("=============================================")
+
+      if (user.game) {
+        return {
+          id: user.id,
+          name: user.name,
+          cards: {
+            hand: user.hand,
+            board: user.board,
+            trump: user.trump,
+          },
+          game: {
+            round: user.game.round,
+            moves: user.game.getMoves(),
+            killer: user.game.getKiller(),
+            deck: user.deck(),
+            villain: user.villain(user.id),
+            attacker: user.game.getAttacker()
+          }
+        }
+      } else {
+        return user
+      }
     }
   } catch (error) {
     res.statusCode = 400
@@ -71,150 +103,6 @@ console.log(`listening to ${port}`)
 
 //--------------------------------------------------------------------//
 
-function engine() {
-
-  let suits = ["h", "d", "s", "c"]
-  let ranks = ["9", "8", "7", "6", "5", "4", "3", "2", "1"]
-
-  let createCards = (suits, ranks) => {
-    if (suits.length !== 4) console.log("Error in suits")
-    if (ranks.length !== 9) console.log("Error in ranks")
-    
-    let cards = []
-    for (rank of ranks) {
-      if (rank.length !== 1) console.log("Error in rank")
-
-      for (suit of suits) {
-        if (suit.length !== 1) console.log("Error in suit")
-
-        cards.push(rank + suit)
-      }
-    }
-
-    return cards
-  } //returns unshuffled cards, 1 deck
-  let shuffle = (deck) => {
-    if (deck.length !=  36)
-      console.log("Shuffling error: not full deck")
-    
-    let lth = deck.length
-    let i, j
-
-    while (lth) {
-          i = Math.floor(Math.random() * lth--)
-          j = deck[lth]
-      deck[lth] = deck[i]
-        deck[i] = j
-    }
-
-    let shuffledDeck = deck
-    return shuffledDeck
-  } //returns shuffled deck
-
-  function test(from, to, nr, id) {
-    let suit = id[1]
-    let rank = id[0]
-    let board = cards.board
-    let moves = referee.whoseMove
-    let killer = referee.killer
-    //we only want to act if there is one card with specific id
-    if (nr == 1 && id !== undefined) {
-      //if it is your turn
-      if (moves === from) {
-        //if you are not the killer and the board is empty
-        if (killer !== from && board.length === 0) {
-          console.log(`${from} moves first card to board`)
-          deal(from, to, nr, id)
-          whoseMove()
-        } else if (killer !== from && board.length > 0) {
-          //test if among all the cards on board is the one u want to add
-          for (let i = 0; i < board.length; i++) {
-            if (rank === board[i][0]) {
-              console.log(`${from} adds attacker to board`)
-              deal(from, to, nr, id)
-              whoseMove()
-              break
-            }
-          }
-        } else if (killer === from && board.length % 2 !== 0) {
-          let attacker = board[board.length -1]
-          let attackerSuit = attacker[1]
-          let attackerRank = attacker[0]
-          let trumpSuit = referee.trumpSuit
-
-          if ((suit === attackerSuit && rank > attackerRank) 
-            || suit === trumpSuit && attackerSuit !== trumpSuit) {
-            
-            console.log(`${from} kills attacker`)
-            deal(from, to, nr, id)
-            whoseMove()
-          } else {
-            console.log(`${from}, pick a better card`)
-          }
-        }
-      }
-    }
-  }
-
-  function whoseMove() {
-    if (referee.whoseMove === "p1") {
-      referee.whoseMove = "p2"
-    } else {
-      referee.whoseMove = "p1"
-    }
-  }
-  function changeKiller() {
-    if (referee.killer === "p1") {
-      referee.killer = "p2"
-    } else {
-      referee.killer = "p1"
-    }    
-  }
-
-  function deal(from, to, nr, id) {
-    console.log("dealing")
-
-    let temp = []
-    if (id !== undefined && nr == 1) {
-      temp = cards[from].splice(cards[from].indexOf(id), 1);
-      cards[to].push(temp[0]);
-    } else {
-      if (from === "deck" && nr > cards.deck.length) {
-        deal("trump", "deck", 1)
-      }
-      temp = cards[from].splice(0, nr)
-      temp.map( (card) => {
-        cards[to].push(card)
-      })
-    }
-
-    return `${from}, ${to}`
-  }
-  function clearBoard(from, to, nr) {
-    deal(from, to, nr)
-    endRound(to)
-  }
-  function endRound(to) {
-    if (to === "muck") {
-      whoseMove()
-      changeKiller()
-    } else {
-      whoseMove()
-    }
-
-    referee.round += 1
-    if (cards.p1.length < 6) {deal("deck", "p1", 6 - cards.p1.length)}
-    if (cards.p2.length < 6) {deal("deck", "p2", 6 - cards.p2.length)}
-    
-  }
-  return {
-    deck: shuffle(createCards(suits, ranks)),
-    deal: deal,
-    test: test,
-    clearBoard: clearBoard,
-  }
-}
-
 //================== State ===================
                                             //
 const users = {}                            //
@@ -222,114 +110,219 @@ const queue = []                            //
 const games = []                            //
                                             //
 //--------------------------------------------
+function User(client) {
+  const name = client.name || "The Nameless One"
+  const hand = []
 
-//================================= Constructors =============================//
-                                                                              //
-                                                                              //
-function Cards(players) {
-  let deck = engine().deck
-
-  this.deck = deck
-  this.trump = deck.splice(0, 1)
-  this.hands = players.map( player => deck.splice(0, 6) )
-  this.board = []
-  this.muck = []
-}
-function Referee(cards) {
-
-  this.moves = 1
-  this.killer = 2
-  this.round = 1
-  this.trumpSuit = cards.trump[0][1]
-}
-function Game(players) {
-  let cards = new Cards(players)
-  let id = games.length
-
-  players.map( (player, ix) => {
-                player.gameId = id
-                player.id = (ix)
-                player.status = "playing"
-               }
-          )
-
-  this.id = id
-  this.status = "active"
-  this.cards = cards
-  this.ref = new Referee(cards)
-}
-function Answer(player) {
-  console.log(`answering`)
-  console.log(player)
-  if (player.gameId) {
-    let game = games[gameId]
-    let gameHands = game.cards.hands
-    let id = player.playerId
-
-    this.id = game.id
-    this.status = game.status
-    this.players = game.players
-    this.cards = {
-        trump: game.cards.trump,
-        board: game.cards.board,
-        hands: Object.keys(gameHands)
-                     .reduce((hands, player) => {
-                        hands[player] = gameHands[player].length
-
-                        return hands
-                      }, {}),
-    }
-    this.cards.hands["p" + id] = gameHands["p" + id]
-    this.ref = game.ref
-  } else {
-    this.players = player
+  return {
+    name,
   }
 }
-                                                                              //
-                                                                              //
-//----------------------------------------------------------------------------//
+function Cards() {
 
-function addUser(ip, user) {
-  users[ip] = user
+  function makeCards() {
+
+    let suits = ["h", "d", "s", "c"]
+    let ranks = ["9", "8", "7", "6", "5", "4", "3", "2", "1"]
+    let cards = []
+
+    for (rank of ranks) {
+      for (suit of suits) {
+        cards.push({ rank, suit, value: +rank })
+      }
+    }
+    
+    return cards
+  } //returns an unshuffled deck of 36 cards
+  function shuffle(deck) {
+
+    let lth = deck.length
+    let i
+    let j
+
+    while (lth) {
+      i = Math.floor(Math.random() * lth--)
+      j = deck[lth]
+      deck[lth] = deck[i]
+      deck[i] = j
+    }
+
+    return deck
+  } //returns shuffled deck
+
+  return shuffle( makeCards() )
+}
+function Game(users) {
+
+  const id = games.length
+  const deck = Cards()
+  const trump = deck[deck.length - 1]
+  const board = []
+  const muck = []
+
+  let round = 1
+  let moves = 0
+  let killer = 1
+  let attacker = null
+  
+  /*
+  Methods for game
+  */
+  function start() {
+    deck.map(card => {
+         if (card.suit === trump.suit) {
+             card.value += 10
+         }
+        })
+    users.map( (user, ix) => {
+                user.id = ix
+                user.deck = () => deck.length
+                user.trump = trump
+                user.board = board
+                user.game = games[id]
+                user.hand = deck.splice(0, 6)
+                user.move = moveCard
+                user.pickUp = pickUpCards
+                user.muck = muckCards
+                user.villain = id => (id === 0) ? users[1].hand.length
+                                                : users[0].hand.length
+    })
+  }
+  function replenish() {
+    console.log("let there be plenty")
+    // console.log(users)
+    users.map( user => {
+
+      let hand = user.hand
+      console.log(hand)
+      if (hand.length < 6) {
+        user.hand = hand.concat(deck.splice(0, 6 - hand.length))
+      }
+    })
+
+    return games[id]
+  }
+  function nextMoves() {
+    console.log("next player, plz")
+    if (moves === 1) {
+      moves = 0
+    } else {
+      moves = 1
+    }
+
+    return games[id]
+  }
+  function nextKiller() {
+    console.log("next player, plz")
+    if (killer === 1) {
+      killer = 0
+    } else {
+      killer = 1
+    }
+
+    return games[id]
+  }
+  function isValid(hand, card) {
+
+    let ix = hand.findIndex( el => 
+                             el.rank === card.rank && 
+                             el.suit === card.suit )
+    //our clientside card does not take value prop with him,
+    //  so lets get corresponding serverside card
+    card = hand[ix]
+
+    if (attacker) {
+      // when there is an attacker check if our card is:
+      // -- same suit or trump
+      // -- has higher value
+      if (card.value > attacker.value && 
+          card.suit === attacker.suit || card.suit === trump.suit) {
+        return true
+      } else return false
+      // if there is no attacker, card (new attacker) can go on the board
+    } else if (board.length) {
+      if (board.some( el => el.rank === card.rank)) {
+        return true
+      } else return false
+    } else return true
+  }
+  function finish() {
+    users.map( user => {
+      delete user.moveCard
+      delete user.pickUpCards
+      delete user.muckCards
+      delete user.game
+    })
+    return games[id]
+  }
+  function getMoves() { return moves }
+  function getKiller() { return killer }
+  function getAttacker() { return attacker }
+  /*
+  Methods for player
+  */
+  function moveCard(hand, card) {
+    let ix = hand.findIndex( el => 
+                             el.rank === card.rank && 
+                             el.suit === card.suit )
+
+    board.push( hand.splice(ix, 1)[0] )
+    // if board is not paired, the single card must be an attacker
+    attacker = (board.length % 2 === 0) ? null
+                                        : board[board.length - 1]
+
+    console.log(games[id])
+    return games[id]
+  }
+  function pickUpCards(user) {
+    console.log("pick up ALLLL the cards")
+    console.log(user.hand)
+    console.log(board)
+    user.hand = user.hand.concat(board.splice(0))
+
+
+    return games[id]
+  }
+  function muckCards() {
+    console.log("muckin like its 1995")
+    muck.push(board.splice(0))
+
+    return games[id]
+  }
+  
+  return {
+    round,
+    getMoves,
+    getAttacker,
+    getKiller,
+    isValid,
+    replenish,
+    nextKiller,
+    nextMoves,
+    start,
+    finish
+  }
+}
+
+//=========================================================================
+
+function addUser(ip, client) {
+  users[ip] = User(client)
 
   return users[ip]
 }
 function queueUser(user) {
-  queue.push( user )
-  user.status = "queued"
+  queue.push(user)
+
+  tryStarting()
 
   return user
 }
-function tryStarting(user) {
-
+function tryStarting() {
   if (queue.length > 1) {
-    let players = queue.splice(0, 2)
-    games.push( new Game( players ))
-    players.map( player => 
-                 player.game = needToKnow( games[player.gameId], player.id))
-  }
-  
-  return user
-}
-function needToKnow(game, playerId) {
-  let deck = game.cards.deck
-  let hands = game.cards.hands.map( (hand, ix) => 
-                                           ix === playerId ? hand
-                                                           : hand.length )
-  console.log("hands: ")
-  console.log(hands)
-  return {
-    id: game.id,
-    status: game.status,
-    cards: {
-            deck: deck.length,
-            trump: game.cards.trump,
-            board: game.cards.board,
-            hands: hands 
-           },
-    ref: game.ref
+    console.log("we can start")
+    let game = Game(queue.splice(0, 2))
+    games.push(game)
+    game.start()
   }
 }
-
-
-
