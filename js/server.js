@@ -65,7 +65,7 @@ http.createServer( (req, res) => {
 
         if (user.game
                 .isValid( user.hand, card )) {
-
+          if (!user.deck())
           user.move(user.hand, card)
               .nextMoves()
         }
@@ -92,12 +92,17 @@ http.createServer( (req, res) => {
           user[client.action](user)
             .replenish()
             .nextKiller()
+            .nextMoves()
       }
-
 
       console.log("=============================================")
 
       if (user.game) {
+        if (user.game.finished) {
+          return {
+            game: user.game.finished
+          }
+        }
         return {
           id: user.id,
           name: user.name,
@@ -180,7 +185,7 @@ function Game(users) {
 
   const id = games.length
   const deck = Cards()
-  const trump = deck.slice(-1)
+  const trump = deck.slice(-1)[0]
   const board = []
   const muck = []
 
@@ -214,29 +219,23 @@ function Game(users) {
   }
   function replenish() {
     console.log("let there be plenty")
-    // console.log(users)
-    // because trump just looks at the last card of the deck
-    // we have to remember its suit in case the deck becomes empty
-    let memTrumpSuit = trump.suit
     // get attacking user and replenish it first 
     // (defender is always last and we have a two player game, so math is simple)
     let attackingUser = (killer === 1) ? 0 : 1
     let attHand = users[attackingUser].hand
     let defHand = users[killer].hand
 
-    topUp([attHand, defHand])
+    users[attackingUser].hand = topUp(users[attackingUser].hand)
+    users[killer].hand        = topUp(users[killer].hand)
 
-    function topUp(hands) {
-      hands.map( hand => {
+    function topUp(hand) {
         if (hand.length < 6 && deck.length) {
-          console.log(deck.length)
           hand = hand.concat(deck.splice(0, 6 - hand.length))
-          console.log(deck.length)
-          return hand
-        } 
-      })
+        } else if (!deck.length) {
+          isEnding()
+        }
+      return hand
     }
-
     return games[id]
   }
   function nextMoves() {
@@ -284,7 +283,21 @@ function Game(users) {
     } else return true
   }
   function isEnding() {
+    if (!deck.length) {
+      let winner = users.findIndex( user => !user.hand.length )
 
+      if (winner > -1) {
+        let loser = winner === 0 ? 1 : 0
+
+        game.finished = {
+          winner: users[winner],
+          loser: users[loser]
+        }
+
+        return true
+      }
+    }
+    return false
   }
   function finish() {
     users.map( user => {
@@ -316,22 +329,20 @@ function Game(users) {
   }
   function pickUpCards(user) {
     console.log("pick up ALLLL the cards")
-    console.log(user.hand)
-    console.log(board)
-    user.hand = user.hand.concat(board.splice(0))
-
-
-    return games[id]
+    if (board.length && board.length % 2 !== 0) {
+      user.hand = user.hand.concat(board.splice(0))
+      return games[id]
+    }
   }
   function muckCards() {
     console.log("muckin like its 1995")
-    muck.push(board.splice(0))
-
-    return games[id]
+    if (board.length && board.length % 2 === 0) {
+      muck.push(board.splice(0))
+      return games[id]
+    }
   }
   
   return {
-    round,
     getMoves,
     getAttacker,
     getKiller,
@@ -340,6 +351,7 @@ function Game(users) {
     nextKiller,
     nextMoves,
     start,
+    isEnding,
     finish
   }
 }

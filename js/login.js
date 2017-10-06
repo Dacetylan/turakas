@@ -110,6 +110,9 @@ function updateGame(newClient) {
         trump: {}
       }
     }
+    if (newClient.game.finished) {
+      alert("Game Over")
+    }
 
     client.id   = newClient.id
     client.game = newClient.game
@@ -168,7 +171,8 @@ function refresh(element) {
     draw(client.cards.board, "board")
     break
   case "trump":
-    draw(client.cards.trump, "trump")
+  // put trump in an array to have length
+    draw([client.cards.trump], "trump")
     break
   }
 
@@ -176,7 +180,7 @@ function refresh(element) {
 }
 
 function draw (arr, str) {
-  console.log(arr, str);
+  // console.log(arr, str);
   document.getElementById(str).innerHTML = "";
   for (var i = 0; i < arr.length; i++) {
     var div = document.createElement("div");
@@ -184,7 +188,7 @@ function draw (arr, str) {
     div.innerHTML = id;
     div.setAttribute('class', 'card');
     div.setAttribute('id', id);
-    console.log(arr[i].suit)
+    // console.log(arr[i].suit)
 
     switch (arr[i].suit) {
       case "h":
@@ -200,8 +204,8 @@ function draw (arr, str) {
       div.style.background = "green";
       break;
     }
-    console.log(div)
-    console.log(str)
+    // console.log(div)
+    // console.log(str)
     console.log(document.getElementById(str))
     document.getElementById(str).appendChild(div);
   }
@@ -222,11 +226,21 @@ function addListeners() {
 }
 function endRound() {
   if (client.game.moves === client.id) {
-    let action = this.id
-    transmit({ action })
-  }
-}
+    var action = this.id
+    let board = client.cards.board
+    // well this is a bitch to read
+    if ((action === "pickUp" 
+          && board.length 
+          && board.length % 2 !== 0)       ||
+         (action === "muck" 
+          && board.length 
+          && board.length % 2 === 0)) {
 
+      transmit({ action }) 
+    }
+  }
+  console.log(`cant ${action}`)
+}
 function moveCard() {
   console.log(this.id)
   const idToObj = id => ({ rank: id[0], suit: id[1] })
@@ -270,14 +284,15 @@ function isValid(card) {
         return false
       }
       // if there is no attacker, card (new attacker) can go on the board
-    } else if (board.length && board.length < 6) {
+    } else if (board.length && board.length < 12) {
+      console.log("laud < 12 ja has length")
       if ( board.some( el => el.rank === card.rank )) {
         return true
       } else return false
-    } else {
-      console.log("here i stand")
+    } else if (board.length < 12) {
+      console.log("here i stand laud on < 12")
       return true
-    }
+    } else return false
   }
 }
 

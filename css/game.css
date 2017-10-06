@@ -40,10 +40,11 @@
   align-self: end;
   margin: .5rem;
 }
+.trump .card {
+
+}
 .deck {
-  margin-left: -3rem;
-  height: 6rem !important;
-  width: 4.5rem !important; 
+  margin-left: -1.8rem;
   background-color: brown;
   color: yellow !important;
   font-size: 3rem !important;
@@ -51,8 +52,8 @@
 }
 
 .card, .villain {
-  height: 8rem;
-  width: 6rem;
+  height: 6rem;
+  width: 4.5rem;
   padding: .5rem;
   border-radius: 8px;
   font-size: 2rem;
@@ -113,7 +114,7 @@
 .player {
   display: flex;
   flex: row wrap;
-  justify-content: flex-start;
+  justify-content: space-between;
   width: 100%;
   padding: .5rem;
   background-color: rgb(75, 100, 150);
