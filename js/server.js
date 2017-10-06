@@ -55,18 +55,43 @@ http.createServer( (req, res) => {
     function getAnswer(client) {
       console.log(client)
 
+      // Pick the user by matching incoming request ip to existing 
+      //  ips in users object.
       let user = users[ip] || queueUser(addUser(ip, client))
 
+      // When client sends a move request, check if move is valid and modify arrays
       if (client.move) {
         let card = client.move
-        if (user.game.isValid(user.hand, card)) {
-          user.move(user.hand, card).nextMoves()
-        }  
+
+        if (user.game
+                .isValid( user.hand, card )) {
+
+          user.move(user.hand, card)
+              .nextMoves()
+        }
+      /*============================================================================
+
+        Action from the client is also the end of the round.
+        Players with uncomplete hands (<6), get dealt cards until they have six.
+        - pickUp() happens when player can't kill the attacker
+          and picks up the cards on the board. 
+          Player remains the defender (killer)
+        - muck() happens when attacker does not attack with more cards.
+          Cards on the board go to 'muck' and defender becomes the attacker
+  
+      ============================================================================*/
+
       } else if (client.action) {
-        if (client.action === "pickUp") {
-          user[client.action](user).replenish().nextMoves()
-        } else if (client.action === "muck")
-          user[client.action](user).replenish().nextKiller()
+
+        if (client.action === "pickUp") { //killer remains the same
+          user[client.action](user)
+            .replenish()
+            .nextMoves()
+
+        } else if (client.action === "muck") //killer changes
+          user[client.action](user)
+            .replenish()
+            .nextKiller()
       }
 
 
@@ -82,7 +107,6 @@ http.createServer( (req, res) => {
             trump: user.trump,
           },
           game: {
-            round: user.game.round,
             moves: user.game.getMoves(),
             killer: user.game.getKiller(),
             deck: user.deck(),
@@ -156,7 +180,7 @@ function Game(users) {
 
   const id = games.length
   const deck = Cards()
-  const trump = deck[deck.length - 1]
+  const trump = deck.slice(-1)
   const board = []
   const muck = []
 
@@ -191,14 +215,27 @@ function Game(users) {
   function replenish() {
     console.log("let there be plenty")
     // console.log(users)
-    users.map( user => {
+    // because trump just looks at the last card of the deck
+    // we have to remember its suit in case the deck becomes empty
+    let memTrumpSuit = trump.suit
+    // get attacking user and replenish it first 
+    // (defender is always last and we have a two player game, so math is simple)
+    let attackingUser = (killer === 1) ? 0 : 1
+    let attHand = users[attackingUser].hand
+    let defHand = users[killer].hand
 
-      let hand = user.hand
-      console.log(hand)
-      if (hand.length < 6) {
-        user.hand = hand.concat(deck.splice(0, 6 - hand.length))
-      }
-    })
+    topUp([attHand, defHand])
+
+    function topUp(hands) {
+      hands.map( hand => {
+        if (hand.length < 6 && deck.length) {
+          console.log(deck.length)
+          hand = hand.concat(deck.splice(0, 6 - hand.length))
+          console.log(deck.length)
+          return hand
+        } 
+      })
+    }
 
     return games[id]
   }
@@ -225,8 +262,8 @@ function Game(users) {
   function isValid(hand, card) {
 
     let ix = hand.findIndex( el => 
-                             el.rank === card.rank && 
-                             el.suit === card.suit )
+                             el.rank === card.rank &&
+                             el.suit === card.suit    )
     //our clientside card does not take value prop with him,
     //  so lets get corresponding serverside card
     card = hand[ix]
@@ -240,11 +277,14 @@ function Game(users) {
         return true
       } else return false
       // if there is no attacker, card (new attacker) can go on the board
-    } else if (board.length) {
+    } else if (board.length && board.length < 6) {
       if (board.some( el => el.rank === card.rank)) {
         return true
       } else return false
     } else return true
+  }
+  function isEnding() {
+
   }
   function finish() {
     users.map( user => {

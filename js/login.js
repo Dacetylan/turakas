@@ -117,7 +117,6 @@ function updateGame(newClient) {
     updateCards( client.cards, newClient.cards )
 
     render("playerId",  client.id + 1)
-    render("round",     client.game.round)
     render("whoseMove", client.game.moves + 1)
     render("killer",    client.game.killer + 1)
     render("deck",      client.game.deck)
@@ -163,17 +162,13 @@ function refresh(element) {
 
   switch (element) {
   case "hand":
-    console.log(client.hand)
-    console.log(client.id)
-
     draw(client.cards.hand, "player")
     break
   case "board":
     draw(client.cards.board, "board")
     break
   case "trump":
-  //trump we send into draw() as an array, so it would have length
-    draw([client.cards.trump], "trump")
+    draw(client.cards.trump, "trump")
     break
   }
 
@@ -194,19 +189,15 @@ function draw (arr, str) {
     switch (arr[i].suit) {
       case "h":
       div.style.background = "red";
-
       break;
       case "d":
       div.style.background = "blue";
-
       break;
       case "s":
       div.style.background = "black";
-
       break;
       case "c":
       div.style.background = "green";
-
       break;
     }
     console.log(div)
@@ -270,10 +261,6 @@ function isValid(card) {
       // when there is an attacker check if our card is:
       // -- same suit or trump
       // -- has higher value
-
-      console.log(card)
-      console.log(attacker)
-      console.log(trump.suit)
       if (card.value > attacker.value && 
           card.suit === attacker.suit || card.suit === trump.suit) {
         console.log("this is true")
@@ -283,8 +270,8 @@ function isValid(card) {
         return false
       }
       // if there is no attacker, card (new attacker) can go on the board
-    } else if (board.length) {
-      if (board.some( el => el.rank === card.rank)) {
+    } else if (board.length && board.length < 6) {
+      if ( board.some( el => el.rank === card.rank )) {
         return true
       } else return false
     } else {
@@ -299,7 +286,6 @@ const gameMarkup = String(
       <div id="info" class="info">
         <div class="stats">
           <div class="round">You are: p<span id="playerId">1</span></div>
-          <div class="round">Round: <span id="round">3</span></div>
           <div class="whoseMove">Moves: p<span id="whoseMove"></span></div>
           <div class="killer">Killer: p<span id="killer"></span></div>
         </div>
