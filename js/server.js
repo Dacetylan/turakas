@@ -65,10 +65,16 @@ http.createServer( (req, res) => {
 
         if (user.game
                 .isValid( user.hand, card )) {
-          if (!user.deck())
-          user.move(user.hand, card)
-              .nextMoves()
+
+            user.move(user.hand, card)
+                          .nextMoves()
+
+          if (!user.deck()) {
+            console.log(`deck is empty: ${user.deck()}`)
+            console.log(`game has ended: ${user.game.isEnding()}`)
+          }
         }
+      }
       /*============================================================================
 
         Action from the client is also the end of the round.
@@ -81,7 +87,7 @@ http.createServer( (req, res) => {
   
       ============================================================================*/
 
-      } else if (client.action) {
+      if (client.action) {
 
         if (client.action === "pickUp") { //killer remains the same
           user[client.action](user)
@@ -100,7 +106,7 @@ http.createServer( (req, res) => {
       if (user.game) {
         if (user.game.finished) {
           return {
-            game: user.game.finished
+            game: {finished: user.game.finished}
           }
         }
         return {
@@ -152,7 +158,7 @@ function Cards() {
   function makeCards() {
 
     let suits = ["h", "d", "s", "c"]
-    let ranks = ["9", "8", "7", "6", "5", "4", "3", "2", "1"]
+    let ranks = [/*"9", "8", "7", "6", "5", "4",*/ "3", "2", "1"]
     let cards = []
 
     for (rank of ranks) {
@@ -232,14 +238,20 @@ function Game(users) {
         if (hand.length < 6 && deck.length) {
           hand = hand.concat(deck.splice(0, 6 - hand.length))
         } else if (!deck.length) {
-          isEnding()
+          console.log("cant replenish, deck empty")
+          console.log(`game is ending ${isEnding()}`)
         }
+      console.log(`i return a hand`)
       return hand
     }
+    console.log("returning the game from replenish")
     return games[id]
   }
   function nextMoves() {
+    console.log("i seem to be running twice and it is driving me crazy")
     console.log("next player, plz")
+    
+    console.log(`moves: ${moves}`)
     if (moves === 1) {
       moves = 0
     } else {
@@ -249,7 +261,7 @@ function Game(users) {
     return games[id]
   }
   function nextKiller() {
-    console.log("next player, plz")
+    console.log("next killer, plz")
     if (killer === 1) {
       killer = 0
     } else {
@@ -283,20 +295,27 @@ function Game(users) {
     } else return true
   }
   function isEnding() {
+    console.log(`dooooooom and glooooooom`)
+
     if (!deck.length) {
       let winner = users.findIndex( user => !user.hand.length )
-
+      console.log(winner)
       if (winner > -1) {
+        console.log(users[winner].hand)
+        console.log(`we have a winner: ${winner}`)
         let loser = winner === 0 ? 1 : 0
-
-        game.finished = {
-          winner: users[winner],
-          loser: users[loser]
-        }
-
+        console.log(loser)
+        users.map( user => {
+                   user.game.finished = {
+                        winner: users[winner].name,
+                        loser: users[loser].name
+                      }
+                    })
         return true
       }
+      console.log("i get here")
     }
+    console.log("i get here but not further")
     return false
   }
   function finish() {
@@ -331,6 +350,7 @@ function Game(users) {
     console.log("pick up ALLLL the cards")
     if (board.length && board.length % 2 !== 0) {
       user.hand = user.hand.concat(board.splice(0))
+      attacker = null
       return games[id]
     }
   }

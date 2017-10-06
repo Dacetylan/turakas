@@ -225,9 +225,10 @@ function addListeners() {
   document.getElementById("muck").onclick = endRound
 }
 function endRound() {
+  let action = this.id
+  let board = client.cards.board
+  
   if (client.game.moves === client.id) {
-    var action = this.id
-    let board = client.cards.board
     // well this is a bitch to read
     if ((action === "pickUp" 
           && board.length 
@@ -270,7 +271,7 @@ function isValid(card) {
     let board = client.cards.board
     let trump = client.cards.trump
 
-    console.log(ix)
+    console.log(attacker)
     if (attacker) {
       // when there is an attacker check if our card is:
       // -- same suit or trump
