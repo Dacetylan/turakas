@@ -54,6 +54,8 @@ http.createServer( (req, res) => {
     }
     function getAnswer(client) {
       console.log(client)
+      console.log("games running:")
+      console.log(games.length)
 
       // Pick the user by matching incoming request ip to existing 
       //  ips in users object.
@@ -63,14 +65,13 @@ http.createServer( (req, res) => {
       if (client.move) {
         let card = client.move
 
-        if (user.game
-                .isValid( user.hand, card )) {
+        if (user.game.isValid( user.hand, card )) {
 
             user.move(user.hand, card)
-                          .nextMoves()
+                .nextMoves()
 
           if (!user.deck()) {
-            console.log(`deck is empty: ${user.deck()}`)
+            console.log(`deck length: ${user.deck()}`)
             console.log(`game has ended: ${user.game.isEnding()}`)
           }
         }
@@ -101,12 +102,37 @@ http.createServer( (req, res) => {
             .nextMoves()
       }
 
+      if (client.new) {
+
+        if (user.game) { user.game.finish() }
+
+        queueUser(user)
+        console.log(user)
+        console.log("queue")
+        console.log(queue)
+      }
+
       console.log("=============================================")
 
       if (user.game) {
         if (user.game.finished) {
+          console.log(user.game.finished)
           return {
-            game: {finished: user.game.finished}
+            id: user.id,
+            name: user.name,
+            cards: {
+              hand: user.hand,
+              board: user.board,
+              trump: user.trump,
+            },
+            game: {
+              finished: user.game.finished,
+              moves: user.game.getMoves(),
+              killer: user.game.getKiller(),
+              deck: user.deck(),
+              villain: user.villain(user.id),
+              attacker: user.game.getAttacker,
+            },
           }
         }
         return {
@@ -210,7 +236,9 @@ function Game(users) {
          }
         })
     users.map( (user, ix) => {
+      console.log(user.name)
                 user.id = ix
+      console.log(user.id)          
                 user.deck = () => deck.length
                 user.trump = trump
                 user.board = board
@@ -248,7 +276,6 @@ function Game(users) {
     return games[id]
   }
   function nextMoves() {
-    console.log("i seem to be running twice and it is driving me crazy")
     console.log("next player, plz")
     
     console.log(`moves: ${moves}`)
@@ -320,10 +347,16 @@ function Game(users) {
   }
   function finish() {
     users.map( user => {
-      delete user.moveCard
-      delete user.pickUpCards
-      delete user.muckCards
+      delete user.id
+      delete user.deck
+      delete user.trump
+      delete user.board
       delete user.game
+      delete user.hand
+      delete user.move
+      delete user.pickUp
+      delete user.muck
+      delete user.villain
     })
     return games[id]
   }
@@ -384,6 +417,9 @@ function addUser(ip, client) {
   return users[ip]
 }
 function queueUser(user) {
+  console.log("Queued ")
+  console.log(queue)
+
   queue.push(user)
 
   tryStarting()

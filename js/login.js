@@ -2,32 +2,6 @@
 
 const client = {}
 
-// const client = {
-//   name: "",
-//   status: "new",
-//   id: 0,
-//   gameId: 0,
-
-//   game: {
-//     status: "",
-//     id: 0,
-
-//     cards: {
-//       board: [],
-//       trump: [],
-//       hands: [[], 0, 0],
-//       deck: 0,
-//     }
-//   },
-
-//   ref: {
-//     killer: 0,
-//     moves: 0,
-//     round: 0,
-//     trumpSuit: "",
-//   }
-// }
-
                            //
 //-------------------------//
 
@@ -57,16 +31,19 @@ function transmit(url) {
 //================= Poll the server ===================//
                                                        //
                                                        //
-            function poll( time = 1000 ) {
-              setInterval( () => {
-                  transmit({name: client.name})
-              }, time)
-            }
+//global variable to store the timer 
+//in case we need to cancel it
+var poller 
+
+
+          function poll( time = 1000 ) {
+            poller = setInterval( () => {
+                transmit({name: client.name})
+            }, time)
+          }
                                                        //
                                                        //
 //-----------------------------------------------------//
-
-
 
 //==================== Login the player ==================//
                                                           //
@@ -89,6 +66,8 @@ document.getElementById("login").onclick = login
                                                           //
                                                           //
 //--------------------------------------------------------//
+
+//=================== Render... things ====================
 function render(element, data) {
   document.getElementById(element).innerHTML = data
 }
@@ -96,40 +75,80 @@ function render(element, data) {
 //=================== Modify the game ====================//
                                                           //
                                                           //
+
+/// this needs to be separated to functions
 function updateGame(newClient) {
 
   client.name = newClient.name
 
-  if (newClient.game) {
-    if (!client.game) {
+  const display = {
+    newGame: () => {
+      //render the game html markup
       render("container", gameMarkup)
-
+      //Create empty cards obj to have smth to be passed on to evaluate 
+      //  against incoming cards obj.
       client.cards = {
         board: [],
         hand: [],
         trump: {}
       }
-    }
-    if (newClient.game.finished) {
-      alert("Game Over")
-    }
 
-    client.id   = newClient.id
-    client.game = newClient.game
+      client.id = newClient.id
+      render("playerId", client.id + 1)
 
-    updateCards( client.cards, newClient.cards )
+      // add listeners for the muck and pickup buttons
+      document.getElementById("pickUp").onclick = endRound
+      document.getElementById("muck").onclick = endRound
+    },
+    game: () => {
+      /*=====================================
+        Update state 
+        - who moves
+        - who is defending (killer)
+        - who how many cards in the deck
+        - how many cards does villain have
+      =====================================*/
+      client.game = newClient.game
+      /*
+        UpdateCards() takes existing cards obj and a new, incoming cards obj
+        - checks if there is a change ( isEqual() )
+        - when the arrays differ, it invokes a refresh of that array
+      */
+      updateCards( client.cards, newClient.cards )
 
-    render("playerId",  client.id + 1)
-    render("whoseMove", client.game.moves + 1)
-    render("killer",    client.game.killer + 1)
-    render("deck",      client.game.deck)
-    render("villain",   client.game.villain)
+      render("whoseMove", client.game.moves + 1)
+      render("killer",    client.game.killer + 1)
+      render("deck",      client.game.deck)
+      render("villain",   client.game.villain)
+    },
+    gameOver: () => {
+      //render markup on the board
+      render("board", gameOver)
 
-  } else {
+      render("villain", client.game.villain)
 
-    delete client.id
-    delete client.game
-    delete client.cards
+      let winnerMsg = `${newClient.game.finished.winner}`
+      let loserMsg = `${newClient.game.finished.loser}`
+
+      render("winner", winnerMsg)
+      render("turakas", loserMsg)
+
+      delete client.id
+      delete client.cards
+      delete client.game
+
+      console.log("clear polling")
+      clearInterval(poller)
+
+      document.getElementById("startNew").onclick = startNewGame
+    },
+  }
+
+  if (newClient.game) {
+
+    if (!client.game)             { display.newGame()  }
+    if (newClient.game.finished)  { display.gameOver() }
+    else display.game()
   }
 }
 
@@ -161,7 +180,7 @@ function updateCards(cards, newCards) {
 }
 
 function refresh(element) {
-    console.log(element)
+  console.log(element)
 
   switch (element) {
   case "hand":
@@ -178,13 +197,15 @@ function refresh(element) {
 
   addListeners()
 }
-
+// draw the cards to the screen
 function draw (arr, str) {
   // console.log(arr, str);
   document.getElementById(str).innerHTML = "";
+
   for (var i = 0; i < arr.length; i++) {
-    var div = document.createElement("div");
+    let div = document.createElement("div");
     let id = arr[i].rank + arr[i].suit
+
     div.innerHTML = id;
     div.setAttribute('class', 'card');
     div.setAttribute('id', id);
@@ -204,30 +225,23 @@ function draw (arr, str) {
       div.style.background = "green";
       break;
     }
-    // console.log(div)
-    // console.log(str)
+
     console.log(document.getElementById(str))
     document.getElementById(str).appendChild(div);
   }
 }
 
-//Lets make the game playable. Next is how to select the card with a mouse
+//Lets make the game playable. Cards are clickable
 function addListeners() {
-  //this var has an array of all the clickable cards
-  var selectedCard = Array.from(document.getElementsByClassName("card"))
+  //make and array of all cards, map over it and add listeners
+  const selectedCard = Array.from(document.getElementsByClassName("card"))
   selectedCard.map( card => card.addEventListener("click", moveCard, false) )
-  // we loop through the cards and add eventlisteners
-  // for (var i = 0; i < selectedCard.length; i++) {
-  //   selectedCard[i].addEventListener("click", moveCard, false);
-  // }
-
-  document.getElementById("pickUp").onclick = endRound
-  document.getElementById("muck").onclick = endRound
 }
+//gets called when muck or pickup is pressed 
 function endRound() {
   let action = this.id
   let board = client.cards.board
-  
+
   if (client.game.moves === client.id) {
     // well this is a bitch to read
     if ((action === "pickUp" 
@@ -242,6 +256,7 @@ function endRound() {
   }
   console.log(`cant ${action}`)
 }
+//gets called when player wants to play a card
 function moveCard() {
   console.log(this.id)
   const idToObj = id => ({ rank: id[0], suit: id[1] })
@@ -251,6 +266,7 @@ function moveCard() {
     transmit({ move: id })
   } 
 }
+//check if move can be made
 function isValid(card) {
 
   let ix = client.cards.hand.findIndex( el => 
@@ -265,6 +281,10 @@ function isValid(card) {
     return true
   } else return false
 
+  /*
+    Check if the move is valid agains the rules of the game.
+    Make this client side, not to send request to server when it is pointless
+  */
   function canMoveCard(card) {
     let hand = client.cards.hand
     let attacker = client.game.attacker
@@ -278,55 +298,76 @@ function isValid(card) {
       // -- has higher value
       if (card.value > attacker.value && 
           card.suit === attacker.suit || card.suit === trump.suit) {
-        console.log("this is true")
+        console.log(`${card} defends successfully`)
         return true
       } else {
-        console.log("something aint right")
+        console.log(`Cant defend with: ${card}`)
         return false
       }
       // if there is no attacker, card (new attacker) can go on the board
     } else if (board.length && board.length < 12) {
-      console.log("laud < 12 ja has length")
+      
       if ( board.some( el => el.rank === card.rank )) {
         return true
-      } else return false
+      } else {
+        console.log(`Cant add ${card}. The same rank must be on the table`)
+        return false
+      }
     } else if (board.length < 12) {
-      console.log("here i stand laud on < 12")
       return true
-    } else return false
+    } else {
+      console.log(`Board is full`)
+      return false
+    }
   }
 }
+//start a new game
+function startNewGame() {
+  console.log("starting new game")
+  transmit({new: "game"})
+  poll()
+}
 
-const gameMarkup = String(
-  `<div class="game">
-      <div id="info" class="info">
-        <div class="stats">
-          <div class="round">You are: p<span id="playerId">1</span></div>
-          <div class="whoseMove">Moves: p<span id="whoseMove"></span></div>
-          <div class="killer">Killer: p<span id="killer"></span></div>
+//=======================  Markup we render  ===========================================
+
+const gameMarkup =
+`
+<div class="game">
+  <div id="info" class="info">
+    <div class="stats">
+      <div class="round">You are: p<span id="playerId">1</span></div>
+      <div class="whoseMove">Moves: p<span id="whoseMove"></span></div>
+      <div class="killer">Killer: p<span id="killer"></span></div>
+    </div>
+    <div class="showCards">
+      <div id="villain" class="villain">1</div>
+      <div class="trumpDeck">
+        <div id="trump" class="trump">
         </div>
-        <div class="showCards">
-          <div id="villain" class="villain">1</div>
-          <div class="trumpDeck">
-            <div id="trump" class="trump">
-            </div>
-            <div id="deck" class="card deck">21</div>
-          </div>
-        </div>
-      </div>
-      <div id="board" class="board">
-      </div>
-      <div class="buttons">
-        <div id="pickUp" class="button">Pick up cards</div>
-        <div id="muck" class="button">Muck cards</div>    
-      </div>
-      <div id="player" class="player">
+        <div id="deck" class="card deck">21</div>
       </div>
     </div>
+  </div>
+  <div id="board" class="board">
+  </div>
+  <div class="buttons">
+    <div id="pickUp" class="button">Pick up cards</div>
+    <div id="muck" class="button">Muck cards</div>    
+  </div>
+  <div id="player" class="player">
+  </div>
+</div>
+`
 
-    <script>
-
-    </script>
-
-    `
-)
+const gameOver = 
+`
+<div id="finished" class="finished">
+  <h1>Game Over</h1>
+  <p>Winner:</p>
+  <h3 id="winner"></h3>
+  <p>Loser:</p>
+  <h2 id="turakas"></h2>
+  <div id="lastCard"></div>
+  <button id="startNew" class="startNew button">New game</button>
+</div>
+`
