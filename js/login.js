@@ -72,7 +72,7 @@ function render(element, data) {
   document.getElementById(element).innerHTML = data
 }
 
-//=================== Modify the game ====================//
+//=================== Modify the client state ============//
                                                           //
                                                           //
 
@@ -179,6 +179,8 @@ function updateCards(cards, newCards) {
   })
 }
 
+
+//pass in a string, telling what section of cards should be updated
 function refresh(element) {
   console.log(element)
 
@@ -197,11 +199,18 @@ function refresh(element) {
 
   addListeners()
 }
-// draw the cards to the screen
+/*
+  Draw the cards to the screen
+  We update the entire array (board or player)
+    instead of moving single cards.
+
+    Later should implement single card updates. 
+*/
 function draw (arr, str) {
   // console.log(arr, str);
   document.getElementById(str).innerHTML = "";
 
+  //replace the loop with map
   for (var i = 0; i < arr.length; i++) {
     let div = document.createElement("div");
     let id = arr[i].rank + arr[i].suit
@@ -241,29 +250,31 @@ function addListeners() {
 function endRound() {
   let action = this.id
   let board = client.cards.board
-
+  // when it is this players move
   if (client.game.moves === client.id) {
-    // well this is a bitch to read
-    if ((action === "pickUp" 
-          && board.length 
-          && board.length % 2 !== 0)       ||
-         (action === "muck" 
-          && board.length 
-          && board.length % 2 === 0)) {
+    // check which button is pressed
+    // and does the board correlate with the requested action
+    if ((  action === "pickUp" 
+        && board.length 
+        && board.length % 2 !== 0 ) 
+      ||
+        (  action === "muck" 
+        && board.length 
+        && board.length % 2 === 0 )) {
 
       transmit({ action }) 
     }
   }
   console.log(`cant ${action}`)
 }
-//gets called when player wants to play a card
+// gets called when player wants to play a card
 function moveCard() {
-  console.log(this.id)
-  const idToObj = id => ({ rank: id[0], suit: id[1] })
-  let id = idToObj(this.id)
+  console.log(`Move: ${this.id}`)
+  const idToObj = id => ({ rank: id[0], 
+                           suit: id[1] })
 
   if ( isValid(id) ) {
-    transmit({ move: id })
+    transmit({ move: idToObj(this.id) })
   } 
 }
 //check if move can be made
