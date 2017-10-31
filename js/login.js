@@ -5,8 +5,6 @@ const client = {}
                            //
 //-------------------------//
 
-
-
 //==================== Transmitter ====================//
                                                        //
                                                        //
@@ -75,13 +73,21 @@ function render(element, data) {
 //=================== Modify the client state ============//
                                                           //
                                                           //
-
-/// this needs to be separated to functions
 function updateGame(newClient) {
 
   client.name = newClient.name
 
+  //bag of functions
   const display = {
+    fadeOut: element => {
+      
+      // return new Promise( (resolve, reject) => {
+        document.getElementById(element).style.opacity = 0
+      // })
+    },
+    fadeIn: element => {
+      document.getElementById(element).style.opacity = 1
+    },
     newGame: () => {
       //render the game html markup
       render("container", gameMarkup)
@@ -125,7 +131,10 @@ function updateGame(newClient) {
       //render markup on the board
       render("board", gameOver)
 
-      render("villain", client.game.villain)
+      // if you refresh game after it has ended, 
+      if (client.game.villain) {
+        render("villain", client.game.villain)
+      }
 
       let winnerMsg = `${newClient.game.finished.winner}`
       let loserMsg = `${newClient.game.finished.loser}`
@@ -146,24 +155,35 @@ function updateGame(newClient) {
 
   if (newClient.game) {
 
-    if (!client.game)             { display.newGame()  }
-    if (newClient.game.finished)  { display.gameOver() }
-    else display.game()
+    if (!client.game) {
+
+      display.fadeOut("container")
+      setTimeout( () => {
+        display.newGame()
+      }, 500)
+      setTimeout( () => {
+        display.fadeIn("container")
+      }, 500)
+    }
+    if (newClient.game.finished) {
+
+      display.gameOver()
+    }
+    else {
+
+      display.game()
+    }
   }
 }
-
                                                           //
                                                           //
 //--------------------------------------------------------//
 
 function isEqual(one, two) {
 
-  return ( Array.isArray(one)   && 
-           Array.isArray(two) ) ?
-            JSON.stringify(one) === 
-            JSON.stringify(two) :
-                            one === 
-                            two
+  return ( Array.isArray(one) && Array.isArray(two) ) ?
+          JSON.stringify(one) === JSON.stringify(two) :
+                          one === two
 }
 function updateCards(cards, newCards) {
   Object.keys(newCards).map( key => {
@@ -178,7 +198,6 @@ function updateCards(cards, newCards) {
     }
   })
 }
-
 
 //pass in a string, telling what section of cards should be updated
 function refresh(element) {
@@ -196,7 +215,9 @@ function refresh(element) {
     draw([client.cards.trump], "trump")
     break
   }
-
+  // add listeners to cards.
+  // no need to invoce it before we actually have cards :)
+  // but still might not be the best place for it
   addListeners()
 }
 /*
@@ -270,11 +291,14 @@ function endRound() {
 // gets called when player wants to play a card
 function moveCard() {
   console.log(`Move: ${this.id}`)
+
   const idToObj = id => ({ rank: id[0], 
                            suit: id[1] })
+  
+  let id = idToObj(this.id)
 
   if ( isValid(id) ) {
-    transmit({ move: idToObj(this.id) })
+    transmit({ move: id })
   } 
 }
 //check if move can be made
@@ -336,6 +360,7 @@ function isValid(card) {
 function startNewGame() {
   console.log("starting new game")
   transmit({new: "game"})
+  //start the poll up again
   poll()
 }
 

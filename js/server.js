@@ -4,6 +4,9 @@ const fs = require("fs")
 
 const port = 2000
 
+//=================================== Server ===========================================//
+                                                                                        //
+                                                                                        //
 http.createServer( (req, res) => {
   try {
     // console.log("request made")
@@ -24,25 +27,24 @@ http.createServer( (req, res) => {
     }
     function transmitFile(path) {
       console.log("transmitting file")
+
       let chooseFile = () => {
         if (path === "/favicon.ico")   return {address: "./img/favicon.ico",
                                                answerType: "image/x-icon"}
         if (path === "/")              return {address: "./login.html",
-                                           answerType: "text"}
+                                               answerType: "text"}
         if (path === "/index.html")    return {address: "./index.html",
-                                           answerType: "text"}
+                                               answerType: "text"}
         if (path === "/login.html")    return {address: "./login.html",
-                                           answerType: "text"}
-        if (path === "/game.html")     return {address: "./game.html",
-                                           answerType: "text"}
+                                               answerType: "text"}
         if (path === "/css/login.css") return {address: "./css/login.css",
-                                           answerType: "text/css"}
-        if (path === "/css/game.css")    return {address: "css/game.css",
-                                           answerType: "text/css"}
+                                               answerType: "text/css"}
+        if (path === "/css/game.css")  return {address: "css/game.css",
+                                               answerType: "text/css"}
         if (path === "/js/client.js")  return {address: "./js/client.js",
-                                           answerType: "text/javascript"}
-        if (path === "/js/login.js")  return {address: "./js/login.js",
-                                           answerType: "text/javascript"}
+                                               answerType: "text/javascript"}
+        if (path === "/js/login.js")   return {address: "./js/login.js",
+                                               answerType: "text/javascript"}
       } //returns file address and type
 
       fs.readFile(chooseFile().address, (err, rawFile) => {
@@ -61,7 +63,7 @@ http.createServer( (req, res) => {
       //  ips in users object.
       let user = users[ip] || queueUser(addUser(ip, client))
 
-      // When client sends a move request, check if move is valid and modify arrays
+      // When client sends a move request, check if move is valid and modify the arrays
       if (client.move) {
         let card = client.move
 
@@ -107,13 +109,14 @@ http.createServer( (req, res) => {
         if (user.game) { user.game.finish() }
 
         queueUser(user)
-        console.log(user)
-        console.log("queue")
-        console.log(queue)
       }
 
       console.log("=============================================")
 
+
+      // following will be dryer. Some day.
+
+      // return this to the client
       if (user.game) {
         if (user.game.finished) {
           console.log(user.game.finished)
@@ -161,16 +164,22 @@ http.createServer( (req, res) => {
   }
 }).listen(2000)
 console.log(`listening to ${port}`)
+                                                                                      //
+                                                                                      //
+//----------------------------- /Server ends/ ----------------------------------------//
 
-//--------------------------------------------------------------------//
+//=== State ==========//
+                      //
+const users = {}      //
+const queue = []      //
+const games = []      //
+                      //
+//--------------------//
 
-//================== State ===================
-                                            //
-const users = {}                            //
-const queue = []                            //
-const games = []                            //
-                                            //
-//--------------------------------------------
+
+//============================= Constructors ===============================//
+                                                                            //
+                                                                            //
 function User(client) {
   const name = client.name || "The Nameless One"
   const hand = []
@@ -254,7 +263,8 @@ function Game(users) {
   function replenish() {
     console.log("let there be plenty")
     // get attacking user and replenish it first 
-    // (defender is always last and we have a two player game, so math is simple)
+    // (defender is always last 
+    //  and we have a two player game, so math is simple)
     let attackingUser = (killer === 1) ? 0 : 1
     let attHand = users[attackingUser].hand
     let defHand = users[killer].hand
@@ -408,8 +418,12 @@ function Game(users) {
     finish
   }
 }
+                                                                            //
+//--------------------------------------------------------------------------//
 
-//=========================================================================
+//============== Game handling logic ===================//
+                                                        //
+                                                        //
 
 function addUser(ip, client) {
   users[ip] = User(client)
@@ -434,3 +448,5 @@ function tryStarting() {
     game.start()
   }
 }
+                                                        //
+//======================================================//
