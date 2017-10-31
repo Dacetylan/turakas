@@ -105,6 +105,7 @@ function updateGame(newClient) {
       // add listeners for the muck and pickup buttons
       document.getElementById("pickUp").onclick = endRound
       document.getElementById("muck").onclick = endRound
+      document.getElementById("sendMsg").onclick = sendMessage
     },
     game: () => {
       /*=====================================
@@ -364,6 +365,16 @@ function startNewGame() {
   poll()
 }
 
+
+//================== Chat ======================
+function sendMessage() {
+  let msg = document.getElementById("msg").value
+  console.log(msg)
+
+  transmit({message: msg})
+}
+
+
 //=======================  Markup we render  ===========================================
 
 const gameMarkup =
@@ -376,6 +387,20 @@ const gameMarkup =
       <div class="killer">Killer: p<span id="killer"></span></div>
     </div>
     <div class="showCards">
+      <div id="chatContainer" class="chatContainer">
+      <form onsubmit="return false" id="chat">
+        <input type="text" 
+               id="msg" 
+               class="msg" 
+               placeholder="Say something"
+               value="something"
+              />
+        <button id="sendMsg" class="sendMsg" value="sendMsg" form="chat">-></button>
+      </form>
+      <div class="messages">
+        Tere
+      </div>
+    </div>
       <div id="villain" class="villain">1</div>
       <div class="trumpDeck">
         <div id="trump" class="trump">
