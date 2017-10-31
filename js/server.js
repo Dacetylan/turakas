@@ -111,6 +111,14 @@ http.createServer( (req, res) => {
         queueUser(user)
       }
 
+      if (client.newMessage) {
+        console.log(`message is: ${client.newMessage}`)
+        console.log(user.game)
+        user.game.messages.push(client.newMessage)
+        console.log(user.game)
+
+      }
+
       console.log("=============================================")
 
 
@@ -135,6 +143,7 @@ http.createServer( (req, res) => {
               deck: user.deck(),
               villain: user.villain(user.id),
               attacker: user.game.getAttacker,
+              messages: user.game.messages,
             },
           }
         }
@@ -151,7 +160,8 @@ http.createServer( (req, res) => {
             killer: user.game.getKiller(),
             deck: user.deck(),
             villain: user.villain(user.id),
-            attacker: user.game.getAttacker()
+            attacker: user.game.getAttacker(),
+            messages: user.game.messages,
           }
         }
       } else {
@@ -234,6 +244,8 @@ function Game(users) {
   let moves = 0
   let killer = 1
   let attacker = null
+
+  const messages = []
   
   /*
   Methods for game
@@ -406,6 +418,7 @@ function Game(users) {
   }
   
   return {
+    messages,
     getMoves,
     getAttacker,
     getKiller,

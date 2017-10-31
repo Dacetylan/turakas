@@ -127,6 +127,7 @@ function updateGame(newClient) {
       render("killer",    client.game.killer + 1)
       render("deck",      client.game.deck)
       render("villain",   client.game.villain)
+      render("messages",  client.game.messages.join("<br>"))
     },
     gameOver: () => {
       //render markup on the board
@@ -371,7 +372,7 @@ function sendMessage() {
   let msg = document.getElementById("msg").value
   console.log(msg)
 
-  transmit({message: msg})
+  transmit({newMessage: msg})
 }
 
 
@@ -397,7 +398,7 @@ const gameMarkup =
               />
         <button id="sendMsg" class="sendMsg" value="sendMsg" form="chat">-></button>
       </form>
-      <div class="messages">
+      <div id="messages">
         Tere
       </div>
     </div>
