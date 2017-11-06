@@ -246,7 +246,7 @@ function draw (arr, str) {
       'd': '&diams;'
     }
 
-    return suits.suit
+    return suits[suit]
   }
   function pickRank(rank) {
     const ranks = {
@@ -261,34 +261,41 @@ function draw (arr, str) {
       '9': 'A'
     }
 
-    return ranks.rank
+    return ranks[rank]
   }
   // console.log(arr, str);
-  document.getElementById(str).innerHTML = "";
+  document.getElementById(str).innerHTML = ""
 
-  //replace the loop with map
+  // TODO: replace the loop with map
   for (var i = 0; i < arr.length; i++) {
-    let div = document.createElement("div");
+    let div = document.createElement("div")
     let id = arr[i].rank + arr[i].suit
 
-    div.innerHTML = `${pickRank(id[0])}${pickSuit(id[1])}`;
-
+    div.innerHTML = `
+      <div class="card-corner">
+        ${pickRank(id[0])}
+        ${pickSuit(id[1])}
+      </div>  
+      <span class="rank">
+        ${pickRank(id[0])}
+      </span>
+      `
     div.setAttribute('class', 'card');
     div.setAttribute('id', id);
     // console.log(arr[i].suit)
 
     switch ( id[1] ) {
       case "h":
-      div.style.background = "red";
+      div.style.background = 'rgb(150, 0, 0)';
       break;
       case "d":
-      div.style.background = "blue";
+      div.style.background = 'rgb(0, 0, 150)';
       break;
       case "s":
-      div.style.background = "black";
+      div.style.background = 'rgb(25, 25, 25)';
       break;
       case "c":
-      div.style.background = "green";
+      div.style.background = 'rgb(0, 100, 0)';
       break;
     }
 

@@ -80,7 +80,7 @@
   width: 4.5rem;
   padding: .5rem;
   border-radius: 8px;
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: white;
   box-shadow: 1px 1px 2px 1px rgba(100, 100, 100, 1);
 }
@@ -96,6 +96,11 @@
   text-align: center;
   font-size: 3rem;
   color: yellow;
+}
+.rank {
+  display: block;
+  font-size: 3rem;
+  text-align: center;
 }
 .board {
 /*   border: .5rem solid rgb(130, 130, 170); */
