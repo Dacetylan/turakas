@@ -203,7 +203,7 @@ function Cards() {
   function makeCards() {
 
     let suits = ["h", "d", "s", "c"]
-    let ranks = [/*"9", "8", "7", "6", "5", "4",*/ "3", "2", "1"]
+    let ranks = ["9", "8", "7", "6", "5", "4", "3", "2", "1"]
     let cards = []
 
     for (rank of ranks) {
@@ -275,8 +275,8 @@ function Game(users) {
   function replenish() {
     console.log("let there be plenty")
     // get attacking user and replenish it first 
-    // (defender is always last 
-    //  and we have a two player game, so math is simple)
+    // defender is always last 
+    // in a two player game, math is simple
     let attackingUser = (killer === 1) ? 0 : 1
     let attHand = users[attackingUser].hand
     let defHand = users[killer].hand

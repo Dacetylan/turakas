@@ -29,6 +29,29 @@
 .info span {
   font-weight: normal;
 }
+.chatContainer form {
+  margin: 0;
+  font-size: 1rem;
+}
+.chatContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 40%;
+  height: 6rem;
+
+}
+.chatContainer .msg {
+  width: 80%;
+}
+#messages {
+
+  /*height: 5rem;*/
+  overflow-y: scroll;
+}
+#chat {
+
+}
 .showCards {
   display: flex;
   flex-flow: row;

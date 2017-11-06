@@ -81,9 +81,8 @@ function updateGame(newClient) {
   const display = {
     fadeOut: element => {
       
-      // return new Promise( (resolve, reject) => {
         document.getElementById(element).style.opacity = 0
-      // })
+
     },
     fadeIn: element => {
       document.getElementById(element).style.opacity = 1
@@ -128,6 +127,14 @@ function updateGame(newClient) {
       render("deck",      client.game.deck)
       render("villain",   client.game.villain)
       render("messages",  client.game.messages.join("<br>"))
+
+      scrollChatToBottom()
+
+      function scrollChatToBottom() {
+        const msgs = document.getElementById("messages")
+
+        msgs.scrollTop = msgs.scrollHeight - msgs.clientHeight
+      }
     },
     gameOver: () => {
       //render markup on the board
@@ -230,6 +237,32 @@ function refresh(element) {
     Later should implement single card updates. 
 */
 function draw (arr, str) {
+  // pick a suit to draw on a card
+  function pickSuit(suit) {
+    const suits = {
+      's': '&spades;',
+      'c': '&clubs;',
+      'h': '&hearts;',
+      'd': '&diams;'
+    }
+
+    return suits.suit
+  }
+  function pickRank(rank) {
+    const ranks = {
+      '1': '6',
+      '2': '7',
+      '3': '8',
+      '4': '9',
+      '5': '10',
+      '6': 'J',
+      '7': 'Q',
+      '8': 'K',
+      '9': 'A'
+    }
+
+    return ranks.rank
+  }
   // console.log(arr, str);
   document.getElementById(str).innerHTML = "";
 
@@ -238,12 +271,13 @@ function draw (arr, str) {
     let div = document.createElement("div");
     let id = arr[i].rank + arr[i].suit
 
-    div.innerHTML = id;
+    div.innerHTML = `${pickRank(id[0])}${pickSuit(id[1])}`;
+
     div.setAttribute('class', 'card');
     div.setAttribute('id', id);
     // console.log(arr[i].suit)
 
-    switch (arr[i].suit) {
+    switch ( id[1] ) {
       case "h":
       div.style.background = "red";
       break;
@@ -370,9 +404,11 @@ function startNewGame() {
 //================== Chat ======================
 function sendMessage() {
   let msg = document.getElementById("msg").value
+
   console.log(msg)
 
   transmit({newMessage: msg})
+  document.getElementById("msg").value = ''
 }
 
 
@@ -389,6 +425,9 @@ const gameMarkup =
     </div>
     <div class="showCards">
       <div id="chatContainer" class="chatContainer">
+      <div id="messages">
+        Tere
+      </div>
       <form onsubmit="return false" id="chat">
         <input type="text" 
                id="msg" 
@@ -398,9 +437,6 @@ const gameMarkup =
               />
         <button id="sendMsg" class="sendMsg" value="sendMsg" form="chat">-></button>
       </form>
-      <div id="messages">
-        Tere
-      </div>
     </div>
       <div id="villain" class="villain">1</div>
       <div class="trumpDeck">
