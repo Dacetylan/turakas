@@ -5,6 +5,9 @@
 }
 
 .game {
+  display: flex;
+  flex-flow: column wrap;
+
   width: 29.7rem;
   font-family: helvetica;
 }
@@ -28,29 +31,6 @@
 }
 .info span {
   font-weight: normal;
-}
-.chatContainer form {
-  margin: 0;
-  font-size: 1rem;
-}
-.chatContainer {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  width: 40%;
-  height: 6rem;
-
-}
-.chatContainer .msg {
-  width: 80%;
-}
-#messages {
-
-  /*height: 5rem;*/
-  overflow-y: scroll;
-}
-#chat {
-
 }
 .showCards {
   display: flex;
@@ -83,9 +63,10 @@
   font-size: 1.5rem;
   color: white;
   box-shadow: 1px 1px 2px 1px rgba(100, 100, 100, 1);
+  background: linear-gradient(to bottom right, rgb(125, 125, 125), rgb(150, 150, 150));
 }
 .villain {
-  background-color: purple;
+  
   display: flex;
   justify-content: center;
   align-items: center;
@@ -107,7 +88,8 @@
   display: flex;
   flex-flow: row wrap;
   justify-content: center;
-  height: 20rem;
+  flex: 0 0 auto;
+  height: 16rem;
   width: 100%;
   padding: .5rem 1rem .5rem .5rem;
   background-color: rgb(130, 130, 170);
@@ -122,25 +104,75 @@
   margin-top: 1rem;
   margin-right: 0;
 }
-.buttons {
+.buttonsChatContainer {
   display: flex;
-  justify-content: space-around;
-  width: 100%;
-  padding: 0 .5rem .5rem;
+  flex-flow: row nowrap;
+  align-items: flex-end;
   background-color: rgb(130, 130, 170);
 }
+.chat { 
+  width: 18rem;
+  margin: 0 .5rem;
+}
+.messages {
+  font-size: .9rem;
+  max-height: 4rem;
+  width: 99.6%;
+  padding: 0rem;
+  overflow-y: hidden;
+  color: rgb(255, 255, 255);
+}
+.newMessage {
+
+}
+.message {
+  width: 100%;
+  max-height: 1.3rem;
+}
+.sendMessage {
+  /*display: none;*/
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  font-size: 3rem;
+  cursor: pointer;
+}
+.sendMessage:focus {
+  outline: none;
+}
+
+.buttons {
+  width: 10rem;
+  display: flex;
+  justify-content: space-around;
+}
 .button {
-  padding: .8rem;
-  background-color: orange;
-  color: rgb(25, 25, 50);
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+  height: 3rem;
+  width: 4rem;
+  padding: .5rem;
+  background-color: rgb(255, 100, 0);
+  border: 2px solid rgb(200, 50, 50);
+  color: rgb(255, 255, 255);
   font-family: verdana;
   font-weight: bold;
   border-radius: 5px;
   user-select: none;
+  text-align: center;
   transition: all .1s ease-in-out
+}
+.muck {
+
+}
+.pickUp {
+  background: rgb(200, );
 }
 .button:hover {
   cursor: pointer;
+  color: rgb(255, 255, 0);
   box-shadow: 0px 0px 4px 1px rgba(50, 55, 0, 1);
 }
 .player {
@@ -150,7 +182,7 @@
   width: 100%;
   min-height: 7.6rem;
   padding: .8rem;
-  background-color: rgb(75, 100, 150);
+  background-color: rgb(130, 130, 170);
   
 }
 .player .card {

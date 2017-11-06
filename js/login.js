@@ -99,12 +99,12 @@ function updateGame(newClient) {
       }
 
       client.id = newClient.id
-      render("playerId", client.id + 1)
+      render("playerId", client.name)
 
       // add listeners for the muck and pickup buttons
       document.getElementById("pickUp").onclick = endRound
       document.getElementById("muck").onclick = endRound
-      document.getElementById("sendMsg").onclick = sendMessage
+      document.getElementById("sendMessage").onclick = sendMessage
     },
     game: () => {
       /*=====================================
@@ -122,11 +122,12 @@ function updateGame(newClient) {
       */
       updateCards( client.cards, newClient.cards )
 
-      render("whoseMove", client.game.moves + 1)
-      render("killer",    client.game.killer + 1)
-      render("deck",      client.game.deck)
-      render("villain",   client.game.villain)
-      render("messages",  client.game.messages.join("<br>"))
+      render("whoseMove",   client.game.moves + 1)
+      render("killer",      client.game.killer + 1)
+      render("deck",        client.game.deck)
+      render("villainName", client.game.villainName)
+      render("villain",     client.game.villain)
+      render("messages",    client.game.messages.join("<br>"))
 
       scrollChatToBottom()
 
@@ -140,7 +141,7 @@ function updateGame(newClient) {
       //render markup on the board
       render("board", gameOver)
 
-      // if you refresh game after it has ended, 
+      // if you refresh game after it has ended,
       if (client.game.villain) {
         render("villain", client.game.villain)
       }
@@ -158,7 +159,7 @@ function updateGame(newClient) {
       console.log("clear polling")
       clearInterval(poller)
 
-      document.getElementById("startNew").onclick = startNewGame
+      document.getElementById("rematch").onclick = startNewGame
     },
   }
 
@@ -287,15 +288,19 @@ function draw (arr, str) {
     switch ( id[1] ) {
       case "h":
       div.style.background = 'rgb(150, 0, 0)';
+      div.style.background = 'linear-gradient(to bottom right, rgb(150, 0, 0), rgb(200, 0, 0))';
       break;
       case "d":
       div.style.background = 'rgb(0, 0, 150)';
+      div.style.background = 'linear-gradient(to bottom right, rgb(0, 0, 150), rgb(0, 0, 255))';
       break;
       case "s":
       div.style.background = 'rgb(25, 25, 25)';
+      div.style.background = 'linear-gradient(to bottom right, rgb(25, 25, 25), rgb(50, 50, 50))';
       break;
       case "c":
       div.style.background = 'rgb(0, 100, 0)';
+      div.style.background = 'linear-gradient(to bottom right, rgb(0, 75, 0), rgb(0, 125, 0))';
       break;
     }
 
@@ -410,12 +415,12 @@ function startNewGame() {
 
 //================== Chat ======================
 function sendMessage() {
-  let msg = document.getElementById("msg").value
+  let msg = document.getElementById("message").value
 
   console.log(msg)
 
   transmit({newMessage: msg})
-  document.getElementById("msg").value = ''
+  document.getElementById("message").value = ''
 }
 
 
@@ -426,25 +431,11 @@ const gameMarkup =
 <div class="game">
   <div id="info" class="info">
     <div class="stats">
-      <div class="round">You are: p<span id="playerId">1</span></div>
+      <div class="hero"><span id="playerId"></span> vs <span id="villainName"></span></div>
       <div class="whoseMove">Moves: p<span id="whoseMove"></span></div>
       <div class="killer">Killer: p<span id="killer"></span></div>
     </div>
     <div class="showCards">
-      <div id="chatContainer" class="chatContainer">
-      <div id="messages">
-        Tere
-      </div>
-      <form onsubmit="return false" id="chat">
-        <input type="text" 
-               id="msg" 
-               class="msg" 
-               placeholder="Say something"
-               value="something"
-              />
-        <button id="sendMsg" class="sendMsg" value="sendMsg" form="chat">-></button>
-      </form>
-    </div>
       <div id="villain" class="villain">1</div>
       <div class="trumpDeck">
         <div id="trump" class="trump">
@@ -455,9 +446,21 @@ const gameMarkup =
   </div>
   <div id="board" class="board">
   </div>
-  <div class="buttons">
-    <div id="pickUp" class="button">Pick up cards</div>
-    <div id="muck" class="button">Muck cards</div>    
+  <div class="buttonsChatContainer">
+    <div class="buttons">
+      <div id="pickUp" class="button">Pick
+        <br>up</div>
+      <div id="muck" class="button">End
+        <br>round</div>
+    </div>
+    <div id="chat" class="chat">
+      <div id="messages" class="messages">
+      </div>
+      <form onsubmit="return false" class="newMessage" id="chatForm">
+        <input type="text" id="message" class="message" placeholder="Say something" value="Hello" />
+      </form>
+    </div>
+    <button id="sendMessage" class="sendMessage" value="sendMessage" form="chatForm">&#x1f4ac;</button>
   </div>
   <div id="player" class="player">
   </div>
@@ -473,6 +476,6 @@ const gameOver =
   <p>Loser:</p>
   <h2 id="turakas"></h2>
   <div id="lastCard"></div>
-  <button id="startNew" class="startNew button">New game</button>
+  <button id="rematch" class="rematch button">Rematch</button>
 </div>
 `

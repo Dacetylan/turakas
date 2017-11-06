@@ -142,6 +142,7 @@ http.createServer( (req, res) => {
               killer: user.game.getKiller(),
               deck: user.deck(),
               villain: user.villain(user.id),
+              villainName: user.villainName(user.id),
               attacker: user.game.getAttacker,
               messages: user.game.messages,
             },
@@ -160,6 +161,7 @@ http.createServer( (req, res) => {
             killer: user.game.getKiller(),
             deck: user.deck(),
             villain: user.villain(user.id),
+            villainName: user.villainName(user.id),
             attacker: user.game.getAttacker(),
             messages: user.game.messages,
           }
@@ -270,6 +272,9 @@ function Game(users) {
                 user.muck = muckCards
                 user.villain = id => (id === 0) ? users[1].hand.length
                                                 : users[0].hand.length
+
+                user.villainName = id => (id === 0) ? users[1].name
+                                                    : users[0].name
     })
   }
   function replenish() {
@@ -379,6 +384,7 @@ function Game(users) {
       delete user.pickUp
       delete user.muck
       delete user.villain
+      delete user.villainName
     })
     return games[id]
   }
