@@ -379,8 +379,17 @@ function isValid(card) {
       // when there is an attacker check if our card is:
       // -- same suit or trump
       // -- has higher value
-      if (card.value > attacker.value && 
-          card.suit === attacker.suit || card.suit === trump.suit) {
+      console.log(card.value, card.suit)
+      console.log(attacker.value, attacker.suit)
+      console.log(trump.suit)
+
+      console.log(card.value > attacker.value)
+      console.log(card.suit === attacker.suit)
+      console.log(card.suit === trump.suit)
+
+
+      if (  card.value > attacker.value && 
+           (card.suit === attacker.suit || card.suit === trump.suit) ) {
         console.log(`${card} defends successfully`)
         return true
       } else {
