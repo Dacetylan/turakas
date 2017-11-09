@@ -270,6 +270,7 @@ function Game(users) {
                 user.move = moveCard
                 user.pickUp = pickUpCards
                 user.muck = muckCards
+                
                 user.villain = id => (id === 0) ? users[1].hand.length
                                                 : users[0].hand.length
 
